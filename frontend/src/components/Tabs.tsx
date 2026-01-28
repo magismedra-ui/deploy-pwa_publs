@@ -1,0 +1,71 @@
+import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet } from '@ionic/react'
+import { homeOutline, documentTextOutline, peopleOutline, settingsOutline } from 'ionicons/icons'
+import { Route, Redirect } from 'react-router-dom'
+import Home from '../pages/Home'
+import Reports from '../pages/Reports'
+import Publs from '../pages/Publs'
+import Settings from '../pages/Settings'
+import Grupos from '../pages/Grupos'
+import Publicadores from '../pages/Publicadores'
+import Asistencias from '../pages/Asistencias'
+import Registros from '../pages/Registros'
+import AddInfoPubl from '../pages/AddInfoPubl'
+
+const Tabs: React.FC = () => {
+	return (
+		<IonTabs>
+			<IonRouterOutlet>
+				<Route exact path="/tabs/home">
+					<Home />
+				</Route>
+				<Route exact path="/tabs/reports">
+					<Reports />
+				</Route>
+				<Route exact path="/tabs/publs">
+					<Publs />
+				</Route>
+				<Route exact path="/tabs/settings">
+					<Settings />
+				</Route>
+				<Route exact path="/tabs/grupos">
+					<Grupos />
+				</Route>
+				<Route exact path="/tabs/publicadores">
+					<Publicadores />
+				</Route>
+				<Route exact path="/tabs/asistencias">
+					<Asistencias />
+				</Route>
+				<Route exact path="/tabs/registros">
+					<Registros />
+				</Route>
+				<Route exact path="/tabs/addinfopubl">
+					<AddInfoPubl />
+				</Route>
+				<Route exact path="/tabs">
+					<Redirect to="/tabs/home" />
+				</Route>
+			</IonRouterOutlet>
+			<IonTabBar slot="bottom">
+				<IonTabButton tab="home" href="/tabs/home">
+					<IonIcon icon={homeOutline} />
+					<IonLabel>Inicio</IonLabel>
+				</IonTabButton>
+				<IonTabButton tab="reports" href="/tabs/reports">
+					<IonIcon icon={documentTextOutline} />
+					<IonLabel>Reportes</IonLabel>
+				</IonTabButton>
+				<IonTabButton tab="publs" href="/tabs/publs">
+					<IonIcon icon={peopleOutline} />
+					<IonLabel>Publicadores</IonLabel>
+				</IonTabButton>
+				<IonTabButton tab="settings" href="/tabs/settings">
+					<IonIcon icon={settingsOutline} />
+					<IonLabel>Configuración</IonLabel>
+				</IonTabButton>
+			</IonTabBar>
+		</IonTabs>
+	)
+}
+
+export default Tabs
