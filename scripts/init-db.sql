@@ -10,6 +10,7 @@ USE tjpubls;
 CREATE TABLE grupo (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   nombre TEXT NOT NULL,
+  nroGrupo INT NULL,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   syncStatus ENUM('pending', 'synced', 'conflict') DEFAULT 'pending',
   deleted BOOLEAN DEFAULT FALSE

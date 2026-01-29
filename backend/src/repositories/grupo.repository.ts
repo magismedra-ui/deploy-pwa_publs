@@ -6,7 +6,8 @@ export class GrupoRepository {
 	async findAll(): Promise<Grupo[]> {
 		const pool = getPool()
 		const [rows] = await pool.execute(
-			'SELECT * FROM grupo WHERE (deleted = FALSE OR deleted IS NULL) ORDER BY nombre'
+			`SELECT * FROM grupo WHERE (deleted = FALSE OR deleted IS NULL)
+			 ORDER BY COALESCE(nroGrupo, 999999) ASC, nombre ASC`
 		)
 		return rows as Grupo[]
 	}

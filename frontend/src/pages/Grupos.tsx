@@ -20,7 +20,6 @@ import { useState, useEffect } from 'react'
 import { add, create, trash } from 'ionicons/icons'
 import { grupoRepository } from '../repositories/grupo.repository'
 import { Grupo } from '../types'
-import { generateUUID } from '../utils/uuid'
 
 const Grupos: React.FC = () => {
 	const [grupos, setGrupos] = useState<Grupo[]>([])
@@ -28,6 +27,7 @@ const Grupos: React.FC = () => {
 	const [showModal, setShowModal] = useState(false)
 	const [editingGrupo, setEditingGrupo] = useState<Grupo | null>(null)
 	const [nombre, setNombre] = useState('')
+	const [nroGrupo, setNroGrupo] = useState<number | ''>('')
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
@@ -47,13 +47,22 @@ const Grupos: React.FC = () => {
 
 	const handleSave = async () => {
 		try {
+			const nro =
+				nroGrupo === '' ? null : Number(nroGrupo)
 			if (editingGrupo) {
-				await grupoRepository.update(editingGrupo.id!, { nombre })
+				await grupoRepository.update(editingGrupo.id!, {
+					nombre,
+					nroGrupo: nro
+				})
 			} else {
-				await grupoRepository.create({ nombre })
+				await grupoRepository.create({
+					nombre,
+					...(nro != null && { nroGrupo: nro })
+				})
 			}
 			setShowModal(false)
 			setNombre('')
+			setNroGrupo('')
 			setEditingGrupo(null)
 			await loadGrupos()
 		} catch (err: any) {
@@ -64,6 +73,7 @@ const Grupos: React.FC = () => {
 	const handleEdit = (grupo: Grupo) => {
 		setEditingGrupo(grupo)
 		setNombre(grupo.nombre)
+		setNroGrupo(grupo.nroGrupo ?? '')
 		setShowModal(true)
 	}
 
@@ -79,6 +89,7 @@ const Grupos: React.FC = () => {
 	const handleNew = () => {
 		setEditingGrupo(null)
 		setNombre('')
+		setNroGrupo('')
 		setShowModal(true)
 	}
 
@@ -98,7 +109,11 @@ const Grupos: React.FC = () => {
 							{grupos.map((grupo) => (
 								<IonItem key={grupo.id}>
 									<IonLabel>
-										<h2>{grupo.nombre}</h2>
+										<h2>
+											{grupo.nroGrupo != null
+												? `Grupo ${grupo.nroGrupo} – ${grupo.nombre}`
+												: grupo.nombre}
+										</h2>
 										<p>{grupo.syncStatus}</p>
 									</IonLabel>
 									<IonButton
@@ -134,6 +149,20 @@ const Grupos: React.FC = () => {
 						</IonToolbar>
 					</IonHeader>
 					<IonContent>
+						<IonItem>
+							<IonInput
+								label="Nº Grupo"
+								labelPlacement="stacked"
+								type="number"
+								min={1}
+								value={nroGrupo}
+								onIonInput={(e) => {
+									const v = e.detail.value
+									setNroGrupo(v === '' ? '' : Number(v))
+								}}
+								placeholder="Ej. 1, 2, 3…"
+							/>
+						</IonItem>
 						<IonItem>
 							<IonInput
 								label="Nombre"

@@ -1,9 +1,15 @@
-import { CapacitorSQLite, SQLiteDBConnection } from '@capacitor-community/sqlite'
+import {
+	CapacitorSQLite,
+	SQLiteConnection,
+	SQLiteDBConnection
+} from '@capacitor-community/sqlite'
 import { Capacitor } from '@capacitor/core'
 
 const DB_NAME = 'tjpubls_db'
+const READONLY = false
 
 class DatabaseService {
+	private sqliteConnection = new SQLiteConnection(CapacitorSQLite)
 	private db: SQLiteDBConnection | null = null
 	private initialized: boolean = false
 
@@ -19,15 +25,17 @@ class DatabaseService {
 		}
 
 		try {
-			this.db = await CapacitorSQLite.createConnection({
-				database: DB_NAME,
-				encrypted: false,
-				mode: 'no-encryption',
-				readOnly: false
-			})
-
-			await this.db.open()
+			const conn = await this.sqliteConnection.createConnection(
+				DB_NAME,
+				false,
+				'no-encryption',
+				1,
+				READONLY
+			)
+			this.db = conn
+			await conn.open()
 			await this.createTables()
+			await this.migrateGrupoNroGrupo()
 			this.initialized = true
 			console.log('SQLite inicializado correctamente')
 		} catch (error) {
@@ -43,6 +51,7 @@ class DatabaseService {
 			`CREATE TABLE IF NOT EXISTS grupo (
 				id TEXT PRIMARY KEY,
 				nombre TEXT NOT NULL,
+				nroGrupo INTEGER,
 				updatedAt INTEGER,
 				deleted INTEGER DEFAULT 0,
 				syncStatus TEXT DEFAULT 'pending'
@@ -130,6 +139,17 @@ class DatabaseService {
 		}
 	}
 
+	private async migrateGrupoNroGrupo(): Promise<void> {
+		if (!this.db) return
+		try {
+			await this.db.execute(
+				'ALTER TABLE grupo ADD COLUMN nroGrupo INTEGER'
+			)
+		} catch {
+			// Columna ya existe o tabla sin nroGrupo en versión nueva
+		}
+	}
+
 	getConnection(): SQLiteDBConnection | null {
 		return this.db
 	}
@@ -145,7 +165,7 @@ class DatabaseService {
 	async close(): Promise<void> {
 		if (this.db) {
 			try {
-				await CapacitorSQLite.closeConnection({ database: DB_NAME })
+				await this.sqliteConnection.closeConnection(DB_NAME, READONLY)
 				this.db = null
 				this.initialized = false
 			} catch (error) {

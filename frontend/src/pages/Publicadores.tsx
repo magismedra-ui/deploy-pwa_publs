@@ -173,14 +173,16 @@ const Publicadores: React.FC = () => {
 								label="Grupo"
 								labelPlacement="stacked"
 								value={formData.grupo}
-								onSelectionChange={(e) =>
+								onIonChange={(e) =>
 									setFormData({ ...formData, grupo: e.detail.value })
 								}
 							>
 								<IonSelectOption value={undefined}>Sin grupo</IonSelectOption>
 								{grupos.map((grupo) => (
 									<IonSelectOption key={grupo.id} value={grupo.id}>
-										{grupo.nombre}
+										{grupo.nroGrupo != null
+											? `Grupo ${grupo.nroGrupo} – ${grupo.nombre}`
+											: grupo.nombre}
 									</IonSelectOption>
 								))}
 							</IonSelect>

@@ -23,6 +23,7 @@ export interface Asistencia extends BaseEntity {
 export interface Grupo extends BaseEntity {
 	id?: string
 	nombre: string
+	nroGrupo?: number | null
 }
 
 export interface Publicador extends BaseEntity {

@@ -1,8 +1,12 @@
-import { Redirect, Route, RouteProps } from 'react-router-dom'
+import { Redirect, Route } from 'react-router-dom'
+import type { ComponentProps } from 'react'
 import { useAuthContext } from '../contexts/AuthContext'
 import { IonLoading } from '@ionic/react'
 
-export const ProtectedRoute: React.FC<RouteProps> = ({ children, ...rest }) => {
+export const ProtectedRoute: React.FC<ComponentProps<typeof Route>> = ({
+	children,
+	...rest
+}) => {
 	const { isAuthenticated, loading } = useAuthContext()
 
 	if (loading) {

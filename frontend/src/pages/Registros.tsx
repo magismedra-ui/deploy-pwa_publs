@@ -157,7 +157,7 @@ const Registros: React.FC = () => {
 								label="Publicador *"
 								labelPlacement="stacked"
 								value={formData.idpublicador}
-								onSelectionChange={(e) =>
+								onIonChange={(e) =>
 									setFormData({ ...formData, idpublicador: e.detail.value })
 								}
 							>

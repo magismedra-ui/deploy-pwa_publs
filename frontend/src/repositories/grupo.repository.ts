@@ -19,7 +19,8 @@ export class GrupoRepository extends LocalRepository<Grupo> {
 		const db = this.getDb()
 		if (!db) return []
 		const result = await db.query(
-			`SELECT * FROM ${this.tableName} WHERE (deleted = 0 OR deleted IS NULL) ORDER BY nombre ASC`
+			`SELECT * FROM ${this.tableName} WHERE (deleted = 0 OR deleted IS NULL)
+			 ORDER BY nroGrupo ASC, nombre ASC`
 		)
 		return this.mapRows((result.values || []) as any[])
 	}

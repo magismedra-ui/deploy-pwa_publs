@@ -5,7 +5,6 @@ import {
 	IonToolbar,
 	IonTitle,
 	IonCard,
-	IonCardContent,
 	IonCardHeader,
 	IonCardTitle,
 	IonGrid,
@@ -19,7 +18,6 @@ import {
 	calendarOutline,
 	documentTextOutline,
 	personOutline,
-	settingsOutline
 } from 'ionicons/icons'
 
 const Home: React.FC = () => {
