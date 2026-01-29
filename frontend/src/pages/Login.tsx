@@ -5,7 +5,6 @@ import {
 	IonToolbar,
 	IonTitle,
 	IonItem,
-	IonLabel,
 	IonInput,
 	IonButton,
 	IonCard,
@@ -16,22 +15,46 @@ import {
 	IonAlert,
 	IonText
 } from '@ionic/react'
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useRef, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useAuthContext } from '../contexts/AuthContext'
 
 const Login: React.FC = () => {
-	const [email, setEmail] = useState('magismedra@gmail.com')
-	const [password, setPassword] = useState('')
+	const emailRef = useRef<HTMLIonInputElement>(null)
+	const passwordRef = useRef<HTMLIonInputElement>(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const { login } = useAuthContext()
+	const { login, isAuthenticated } = useAuthContext()
 	const history = useHistory()
+
+	// Navegar cuando el usuario se autentique (solo si no estamos en la página de login)
+	useEffect(() => {
+		if (isAuthenticated && !loading && window.location.pathname === '/login') {
+			history.push('/tabs/home')
+		}
+	}, [isAuthenticated, loading, history])
+
+	// Establecer valor inicial después del montaje para evitar problemas de observación
+	useEffect(() => {
+		if (emailRef.current) {
+			const emailInput = emailRef.current.getElementsByTagName('input')[0] as HTMLInputElement
+			if (emailInput && !emailInput.value) {
+				emailInput.value = 'magismedra@gmail.com'
+			}
+		}
+	}, [])
 
 	const handleLogin = async (e: FormEvent) => {
 		e.preventDefault()
 		setLoading(true)
 		setError(null)
+
+		// Leer valores directamente del elemento nativo del input
+		const emailElement = emailRef.current?.getElementsByTagName('input')[0] as HTMLInputElement
+		const passwordElement = passwordRef.current?.getElementsByTagName('input')[0] as HTMLInputElement
+		
+		const email = emailElement?.value || ''
+		const password = passwordElement?.value || ''
 
 		if (!email || !password) {
 			setError('Por favor completa todos los campos')
@@ -41,7 +64,7 @@ const Login: React.FC = () => {
 
 		try {
 			await login(email, password)
-			history.push('/tabs/home')
+			// La navegación se manejará automáticamente por el useEffect cuando isAuthenticated cambie
 		} catch (err: any) {
 			setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.')
 		} finally {
@@ -50,55 +73,54 @@ const Login: React.FC = () => {
 	}
 
 	return (
-		<IonPage>
-			<IonHeader>
-				<IonToolbar color="primary">
-					<IonTitle>TJPubls</IonTitle>
-				</IonToolbar>
-			</IonHeader>
-			<IonContent fullscreen className="ion-padding">
-				<div
-					style={{
-						display: 'flex',
-						justifyContent: 'center',
-						alignItems: 'center',
-						minHeight: '100%',
-						padding: '20px'
-					}}
-				>
-					<IonCard style={{ width: '100%', maxWidth: '400px' }}>
+		<IonPage className="login-page">
+			<IonContent fullscreen className="ion-padding login-content">
+				<div className="login-container">
+					{/* Logo/Placeholder */}
+					<div className="login-logo">
+						<IonText>
+							<h1 className="login-title">TJPubls</h1>
+							<p className="login-subtitle">Gestión de Publicadores</p>
+						</IonText>
+					</div>
+
+					{/* Formulario */}
+					<IonCard className="login-card">
 						<IonCardHeader>
-							<IonCardTitle>Iniciar Sesión</IonCardTitle>
+							<IonCardTitle className="login-card-title">Iniciar Sesión</IonCardTitle>
 						</IonCardHeader>
 						<IonCardContent>
-							<form onSubmit={handleLogin}>
-								<IonItem>
-									<IonLabel position="stacked">Email *</IonLabel>
+							<form onSubmit={handleLogin} className="login-form">
+								<IonItem className="login-item">
 									<IonInput
+										ref={emailRef}
 										type="email"
-										value={email}
-										onIonInput={(e) => setEmail(e.detail.value!)}
+										label="Email"
+										labelPlacement="stacked"
 										placeholder="tu@email.com"
 										required
 										autocomplete="email"
+										className="login-input"
 									/>
 								</IonItem>
-								<IonItem>
-									<IonLabel position="stacked">Contraseña *</IonLabel>
+								<IonItem className="login-item">
 									<IonInput
+										ref={passwordRef}
 										type="password"
-										value={password}
-										onIonInput={(e) => setPassword(e.detail.value!)}
+										label="Contraseña"
+										labelPlacement="stacked"
 										placeholder="Ingresa tu contraseña"
 										required
 										autocomplete="current-password"
+										className="login-input"
 									/>
 								</IonItem>
 								<IonButton
 									expand="block"
 									type="submit"
+									color="primary"
 									disabled={loading}
-									style={{ marginTop: '20px' }}
+									className="login-button"
 								>
 									{loading ? 'Iniciando...' : 'Iniciar Sesión'}
 								</IonButton>
@@ -108,11 +130,11 @@ const Login: React.FC = () => {
 				</div>
 				<IonLoading isOpen={loading} message="Iniciando sesión..." />
 				<IonAlert
-					isOpen={!!error}
+					isOpen={Boolean(error)}
 					onDidDismiss={() => setError(null)}
 					header="Error de Autenticación"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', handler: () => setError(null) }]}
 				/>
 			</IonContent>
 		</IonPage>

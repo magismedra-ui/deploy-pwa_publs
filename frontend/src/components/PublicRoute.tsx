@@ -10,7 +10,7 @@ export const PublicRoute: React.FC<RouteProps> = ({ children, ...rest }) => {
 	}
 
 	if (isAuthenticated) {
-		return <Redirect to="/home" />
+		return <Redirect to="/tabs/home" />
 	}
 
 	return <Route {...rest}>{children}</Route>

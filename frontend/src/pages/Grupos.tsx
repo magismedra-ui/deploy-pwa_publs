@@ -135,10 +135,11 @@ const Grupos: React.FC = () => {
 					</IonHeader>
 					<IonContent>
 						<IonItem>
-							<IonLabel position="stacked">Nombre</IonLabel>
 							<IonInput
+								label="Nombre"
+								labelPlacement="stacked"
 								value={nombre}
-								onIonInput={(e) => setNombre(e.detail.value!)}
+								onIonInput={(e) => setNombre(e.detail.value as string)}
 								placeholder="Nombre del grupo"
 							/>
 						</IonItem>
@@ -148,11 +149,11 @@ const Grupos: React.FC = () => {
 					</IonContent>
 				</IonModal>
 				<IonAlert
-					isOpen={!!error}
+					isOpen={Boolean(error)}
 					onDidDismiss={() => setError(null)}
 					header="Error"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', handler: () => setError(null) }]}
 				/>
 			</IonContent>
 		</IonPage>

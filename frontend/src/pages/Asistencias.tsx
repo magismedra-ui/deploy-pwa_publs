@@ -138,43 +138,48 @@ const Asistencias: React.FC = () => {
 					</IonHeader>
 					<IonContent>
 						<IonItem>
-							<IonLabel position="stacked">Fecha</IonLabel>
 							<IonInput
 								type="date"
+								label="Fecha"
+								labelPlacement="stacked"
 								value={
 									formData.fecha
 										? new Date(formData.fecha).toISOString().split('T')[0]
 										: ''
 								}
 								onIonInput={(e) =>
-									setFormData({ ...formData, fecha: e.detail.value! })
+									setFormData({ ...formData, fecha: e.detail.value as string })
 								}
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Presencial</IonLabel>
 							<IonInput
 								type="number"
+								label="Presencial"
+								labelPlacement="stacked"
 								value={formData.presencial?.toString() || ''}
-								onIonInput={(e) =>
+								onIonInput={(e) => {
+									const value = e.detail.value as string
 									setFormData({
 										...formData,
-										presencial: parseInt(e.detail.value!) || 0
+										presencial: value ? parseInt(value) : 0
 									})
-								}
+								}}
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Zoom</IonLabel>
 							<IonInput
 								type="number"
+								label="Zoom"
+								labelPlacement="stacked"
 								value={formData.zoom?.toString() || ''}
-								onIonInput={(e) =>
+								onIonInput={(e) => {
+									const value = e.detail.value as string
 									setFormData({
 										...formData,
-										zoom: parseInt(e.detail.value!) || 0
+										zoom: value ? parseInt(value) : 0
 									})
-								}
+								}}
 							/>
 						</IonItem>
 						<IonButton expand="block" onClick={handleSave} style={{ margin: '20px' }}>
@@ -183,11 +188,11 @@ const Asistencias: React.FC = () => {
 					</IonContent>
 				</IonModal>
 				<IonAlert
-					isOpen={!!error}
+					isOpen={Boolean(error)}
 					onDidDismiss={() => setError(null)}
 					header="Error"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', handler: () => setError(null) }]}
 				/>
 			</IonContent>
 		</IonPage>

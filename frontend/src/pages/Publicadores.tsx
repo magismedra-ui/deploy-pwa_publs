@@ -145,30 +145,33 @@ const Publicadores: React.FC = () => {
 					</IonHeader>
 					<IonContent>
 						<IonItem>
-							<IonLabel position="stacked">Nombre *</IonLabel>
 							<IonInput
+								label="Nombre *"
+								labelPlacement="stacked"
 								value={formData.nombre || ''}
 								onIonInput={(e) =>
-									setFormData({ ...formData, nombre: e.detail.value! })
+									setFormData({ ...formData, nombre: e.detail.value as string })
 								}
 								placeholder="Nombre"
 								required
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Email</IonLabel>
 							<IonInput
 								type="email"
+								label="Email"
+								labelPlacement="stacked"
 								value={formData.correo || ''}
 								onIonInput={(e) =>
-									setFormData({ ...formData, correo: e.detail.value! })
+									setFormData({ ...formData, correo: e.detail.value as string })
 								}
 								placeholder="Email"
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Grupo</IonLabel>
 							<IonSelect
+								label="Grupo"
+								labelPlacement="stacked"
 								value={formData.grupo}
 								onSelectionChange={(e) =>
 									setFormData({ ...formData, grupo: e.detail.value })
@@ -188,11 +191,11 @@ const Publicadores: React.FC = () => {
 					</IonContent>
 				</IonModal>
 				<IonAlert
-					isOpen={!!error}
+					isOpen={Boolean(error)}
 					onDidDismiss={() => setError(null)}
 					header="Error"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', handler: () => setError(null) }]}
 				/>
 			</IonContent>
 		</IonPage>

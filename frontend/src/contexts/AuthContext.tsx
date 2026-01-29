@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { useHistory } from 'react-router-dom'
 import { authService } from '../services/auth.service'
 import { AuthResponse } from '../types'
 
@@ -30,7 +29,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 	const [user, setUser] = useState<any | null>(null)
 	const [loading, setLoading] = useState<boolean>(true)
-	const history = useHistory()
 
 	useEffect(() => {
 		checkAuth()
@@ -61,7 +59,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		await authService.logout()
 		setIsAuthenticated(false)
 		setUser(null)
-		history.push('/login')
+		// Usar window.location para navegar cuando history no está disponible
+		if (typeof window !== 'undefined') {
+			window.location.href = '/login'
+		}
 	}
 
 	return (

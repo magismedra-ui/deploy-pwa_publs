@@ -149,8 +149,9 @@ const AddInfoPublPage: React.FC = () => {
 					</IonHeader>
 					<IonContent>
 						<IonItem>
-							<IonLabel position="stacked">Publicador *</IonLabel>
 							<IonSelect
+								label="Publicador *"
+								labelPlacement="stacked"
 								value={formData.idpublicador}
 								onSelectionChange={(e) =>
 									setFormData({ ...formData, idpublicador: e.detail.value })
@@ -164,25 +165,27 @@ const AddInfoPublPage: React.FC = () => {
 							</IonSelect>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Fecha</IonLabel>
 							<IonInput
 								type="date"
+								label="Fecha"
+								labelPlacement="stacked"
 								value={
 									formData.fecha
 										? new Date(formData.fecha).toISOString().split('T')[0]
 										: ''
 								}
 								onIonInput={(e) =>
-									setFormData({ ...formData, fecha: e.detail.value! })
+									setFormData({ ...formData, fecha: e.detail.value as string })
 								}
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Observaciones</IonLabel>
 							<IonTextarea
+								label="Observaciones"
+								labelPlacement="stacked"
 								value={formData.observaciones || ''}
 								onIonInput={(e) =>
-									setFormData({ ...formData, observaciones: e.detail.value! })
+									setFormData({ ...formData, observaciones: e.detail.value as string })
 								}
 								rows={4}
 							/>
@@ -193,11 +196,11 @@ const AddInfoPublPage: React.FC = () => {
 					</IonContent>
 				</IonModal>
 				<IonAlert
-					isOpen={!!error}
+					isOpen={Boolean(error)}
 					onDidDismiss={() => setError(null)}
 					header="Error"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', handler: () => setError(null) }]}
 				/>
 			</IonContent>
 		</IonPage>

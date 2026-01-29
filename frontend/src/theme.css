@@ -1,0 +1,293 @@
+/* Theme Global - Variables CSS */
+:root {
+	/* Colores principales */
+	--ion-color-primary: #97B4FF;
+	--ion-color-primary-rgb: 151, 180, 255;
+	--ion-color-primary-contrast: #ffffff;
+	--ion-color-primary-contrast-rgb: 255, 255, 255;
+	--ion-color-primary-shade: #859ee0;
+	--ion-color-primary-tint: #a1bfff;
+
+	/* Fondo oscuro */
+	--ion-background-color: #1a1f2e;
+	--ion-background-color-rgb: 26, 31, 46;
+	
+	/* Fondo de items */
+	--ion-item-background: #252b3d;
+	--ion-item-background-rgb: 37, 43, 61;
+	
+	/* Texto */
+	--ion-text-color: #ffffff;
+	--ion-text-color-rgb: 255, 255, 255;
+	
+	/* Bordes y separadores */
+	--ion-border-color: #2d3447;
+	--ion-item-border-color: #2d3447;
+	
+	/* Toolbar */
+	--ion-toolbar-background: #1e2435;
+	--ion-toolbar-color: #ffffff;
+	
+	/* Card */
+	--ion-card-background: #252b3d;
+	--ion-card-color: #ffffff;
+	
+	/* Input */
+	--ion-input-background: #1e2435;
+	--ion-input-color: #ffffff;
+	--ion-input-placeholder-color: rgba(255, 255, 255, 0.5);
+	
+	/* Tab bar */
+	--ion-tab-bar-background: #1e2435;
+	--ion-tab-bar-color: rgba(255, 255, 255, 0.6);
+	--ion-tab-bar-color-selected: #97B4FF;
+	
+	/* Otros colores */
+	--ion-color-step-50: #1e2435;
+	--ion-color-step-100: #252b3d;
+	--ion-color-step-150: #2d3447;
+	--ion-color-step-200: #353c51;
+	--ion-color-step-250: #3d445b;
+	--ion-color-step-300: #454c65;
+	--ion-color-step-350: #4d546f;
+	--ion-color-step-400: #555c79;
+	--ion-color-step-450: #5d6483;
+	--ion-color-step-500: #656c8d;
+	--ion-color-step-550: #6d7497;
+	--ion-color-step-600: #757ca1;
+	--ion-color-step-650: #7d84ab;
+	--ion-color-step-700: #858cb5;
+	--ion-color-step-750: #8d94bf;
+	--ion-color-step-800: #959cc9;
+	--ion-color-step-850: #9da4d3;
+	--ion-color-step-900: #a5acdd;
+	--ion-color-step-950: #adb4e7;
+}
+
+/* Aplicar tema a elementos específicos */
+ion-content {
+	--background: var(--ion-background-color);
+	--color: var(--ion-text-color);
+}
+
+ion-header {
+	--background: var(--ion-toolbar-background);
+}
+
+ion-toolbar {
+	--background: var(--ion-toolbar-background);
+	--color: var(--ion-text-color);
+}
+
+ion-item {
+	--background: var(--ion-item-background);
+	--color: var(--ion-text-color);
+	--border-color: var(--ion-item-border-color);
+}
+
+ion-card {
+	--background: var(--ion-card-background);
+	--color: var(--ion-card-color);
+}
+
+ion-input {
+	--background: var(--ion-input-background);
+	--color: var(--ion-input-color);
+	--placeholder-color: var(--ion-input-placeholder-color);
+}
+
+ion-tab-bar {
+	--background: var(--ion-tab-bar-background);
+	--color: var(--ion-tab-bar-color);
+}
+
+ion-tab-button {
+	--color-selected: var(--ion-tab-bar-color-selected);
+}
+
+/* Estilos para Login */
+.login-page {
+	--background: var(--ion-background-color);
+}
+
+.login-content {
+	--background: var(--ion-background-color);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.login-container {
+	width: 100%;
+	max-width: 400px;
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
+.login-logo {
+	text-align: center;
+	margin-bottom: 1rem;
+}
+
+.login-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin: 0;
+	color: var(--ion-color-primary);
+	letter-spacing: 0.05em;
+}
+
+.login-subtitle {
+	font-size: 1rem;
+	margin: 0.5rem 0 0 0;
+	color: var(--ion-text-color);
+	opacity: 0.8;
+}
+
+.login-card {
+	margin: 0;
+	border-radius: 16px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.login-card-title {
+	font-size: 1.5rem;
+	font-weight: 600;
+	text-align: center;
+	margin-bottom: 1.5rem;
+}
+
+.login-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.login-item {
+	margin-bottom: 1rem;
+	border-radius: 8px;
+	--border-radius: 8px;
+}
+
+.login-input {
+	--padding-start: 0;
+	--padding-end: 0;
+}
+
+.login-button {
+	margin-top: 1.5rem;
+	--border-radius: 8px;
+	font-weight: 600;
+	height: 48px;
+}
+
+/* Estilos para Home */
+.home-page {
+	--background: var(--ion-background-color);
+}
+
+.home-content {
+	--background: var(--ion-background-color);
+}
+
+.home-header {
+	--background: var(--ion-toolbar-background);
+}
+
+.home-card {
+	margin: 0;
+	border-radius: 12px;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	min-height: 120px;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-card:active {
+	transform: scale(0.98);
+}
+
+.home-card-icon {
+	font-size: 3rem;
+	color: var(--ion-color-primary);
+	margin-bottom: 0.5rem;
+}
+
+.home-card-title {
+	font-size: 1rem;
+	font-weight: 600;
+	text-align: center;
+	margin: 0;
+}
+
+.home-grid {
+	padding: 1rem;
+}
+
+.home-row {
+	margin-bottom: 1rem;
+}
+
+.home-col {
+	padding: 0.5rem;
+}
+
+/* Estilos para TabBar */
+ion-tabs {
+	--background: var(--ion-background-color);
+}
+
+ion-tab-bar {
+	border-top: 1px solid var(--ion-border-color);
+	padding-top: 0.5rem;
+	padding-bottom: env(safe-area-inset-bottom);
+}
+
+ion-tab-button {
+	--color: var(--ion-tab-bar-color);
+	--color-selected: var(--ion-tab-bar-color-selected);
+	font-size: 0.75rem;
+}
+
+ion-tab-button.tab-selected {
+	--color: var(--ion-tab-bar-color-selected);
+}
+
+ion-tab-button ion-icon {
+	font-size: 1.5rem;
+	margin-bottom: 0.25rem;
+}
+
+ion-tab-button ion-label {
+	font-size: 0.75rem;
+	font-weight: 500;
+	margin-top: 0.25rem;
+}
+
+/* Mejoras generales */
+ion-card {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+ion-button {
+	--border-radius: 8px;
+	font-weight: 600;
+	text-transform: none;
+}
+
+/* Responsive para capturas */
+@media (min-width: 768px) {
+	.login-container {
+		max-width: 450px;
+	}
+	
+	.home-grid {
+		max-width: 600px;
+		margin: 0 auto;
+	}
+}

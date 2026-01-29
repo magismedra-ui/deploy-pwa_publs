@@ -153,8 +153,9 @@ const Registros: React.FC = () => {
 					</IonHeader>
 					<IonContent>
 						<IonItem>
-							<IonLabel position="stacked">Publicador *</IonLabel>
 							<IonSelect
+								label="Publicador *"
+								labelPlacement="stacked"
 								value={formData.idpublicador}
 								onSelectionChange={(e) =>
 									setFormData({ ...formData, idpublicador: e.detail.value })
@@ -168,38 +169,43 @@ const Registros: React.FC = () => {
 							</IonSelect>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Año</IonLabel>
 							<IonInput
 								type="number"
+								label="Año"
+								labelPlacement="stacked"
 								value={formData.anno_servicio?.toString() || ''}
-								onIonInput={(e) =>
+								onIonInput={(e) => {
+									const value = e.detail.value as string
 									setFormData({
 										...formData,
-										anno_servicio: parseInt(e.detail.value!) || undefined
+										anno_servicio: value ? parseInt(value) : undefined
 									})
-								}
+								}}
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Mes</IonLabel>
 							<IonInput
+								label="Mes"
+								labelPlacement="stacked"
 								value={formData.mes || ''}
 								onIonInput={(e) =>
-									setFormData({ ...formData, mes: e.detail.value! })
+									setFormData({ ...formData, mes: e.detail.value as string })
 								}
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Horas</IonLabel>
 							<IonInput
 								type="number"
+								label="Horas"
+								labelPlacement="stacked"
 								value={formData.horas?.toString() || ''}
-								onIonInput={(e) =>
+								onIonInput={(e) => {
+									const value = e.detail.value as string
 									setFormData({
 										...formData,
-										horas: parseInt(e.detail.value!) || undefined
+										horas: value ? parseInt(value) : undefined
 									})
-								}
+								}}
 							/>
 						</IonItem>
 						<IonButton expand="block" onClick={handleSave} style={{ margin: '20px' }}>
@@ -208,11 +214,11 @@ const Registros: React.FC = () => {
 					</IonContent>
 				</IonModal>
 				<IonAlert
-					isOpen={!!error}
+					isOpen={Boolean(error)}
 					onDidDismiss={() => setError(null)}
 					header="Error"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', handler: () => setError(null) }]}
 				/>
 			</IonContent>
 		</IonPage>

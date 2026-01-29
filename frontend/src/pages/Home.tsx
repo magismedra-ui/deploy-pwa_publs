@@ -26,64 +26,64 @@ const Home: React.FC = () => {
 	const history = useHistory()
 
 	return (
-		<IonPage>
-			<IonHeader>
+		<IonPage className="home-page">
+			<IonHeader className="home-header">
 				<IonToolbar>
 					<IonTitle>TJPubls</IonTitle>
 				</IonToolbar>
 			</IonHeader>
-			<IonContent fullscreen className="ion-padding">
-				<IonGrid>
-					<IonRow>
-						<IonCol size="6">
-							<IonCard button onClick={() => history.push('/tabs/grupos')}>
+			<IonContent fullscreen className="home-content">
+				<IonGrid className="home-grid">
+					<IonRow className="home-row">
+						<IonCol size="6" className="home-col">
+							<IonCard button onClick={() => history.push('/tabs/grupos')} className="home-card">
 								<IonCardHeader>
-									<IonIcon icon={peopleOutline} size="large" />
-									<IonCardTitle>Grupos</IonCardTitle>
+									<IonIcon icon={peopleOutline} className="home-card-icon" />
+									<IonCardTitle className="home-card-title">Grupos</IonCardTitle>
 								</IonCardHeader>
 							</IonCard>
 						</IonCol>
-						<IonCol size="6">
-							<IonCard button onClick={() => history.push('/tabs/publicadores')}>
+						<IonCol size="6" className="home-col">
+							<IonCard button onClick={() => history.push('/tabs/publicadores')} className="home-card">
 								<IonCardHeader>
-									<IonIcon icon={personOutline} size="large" />
-									<IonCardTitle>Publicadores</IonCardTitle>
-								</IonCardHeader>
-							</IonCard>
-						</IonCol>
-					</IonRow>
-					<IonRow>
-						<IonCol size="6">
-							<IonCard button onClick={() => history.push('/tabs/asistencias')}>
-								<IonCardHeader>
-									<IonIcon icon={calendarOutline} size="large" />
-									<IonCardTitle>Asistencias</IonCardTitle>
-								</IonCardHeader>
-							</IonCard>
-						</IonCol>
-						<IonCol size="6">
-							<IonCard button onClick={() => history.push('/tabs/registros')}>
-								<IonCardHeader>
-									<IonIcon icon={documentTextOutline} size="large" />
-									<IonCardTitle>Registros</IonCardTitle>
+									<IonIcon icon={personOutline} className="home-card-icon" />
+									<IonCardTitle className="home-card-title">Publicadores</IonCardTitle>
 								</IonCardHeader>
 							</IonCard>
 						</IonCol>
 					</IonRow>
-					<IonRow>
-						<IonCol size="6">
-							<IonCard button onClick={() => history.push('/tabs/addinfopubl')}>
+					<IonRow className="home-row">
+						<IonCol size="6" className="home-col">
+							<IonCard button onClick={() => history.push('/tabs/asistencias')} className="home-card">
 								<IonCardHeader>
-									<IonIcon icon={documentTextOutline} size="large" />
-									<IonCardTitle>Info Publicador</IonCardTitle>
+									<IonIcon icon={calendarOutline} className="home-card-icon" />
+									<IonCardTitle className="home-card-title">Asistencias</IonCardTitle>
 								</IonCardHeader>
 							</IonCard>
 						</IonCol>
-						<IonCol size="6">
-							<IonCard button onClick={() => history.push('/tabs/publs')}>
+						<IonCol size="6" className="home-col">
+							<IonCard button onClick={() => history.push('/tabs/registros')} className="home-card">
 								<IonCardHeader>
-									<IonIcon icon={peopleOutline} size="large" />
-									<IonCardTitle>Gestión Publs</IonCardTitle>
+									<IonIcon icon={documentTextOutline} className="home-card-icon" />
+									<IonCardTitle className="home-card-title">Registros</IonCardTitle>
+								</IonCardHeader>
+							</IonCard>
+						</IonCol>
+					</IonRow>
+					<IonRow className="home-row">
+						<IonCol size="6" className="home-col">
+							<IonCard button onClick={() => history.push('/tabs/addinfopubl')} className="home-card">
+								<IonCardHeader>
+									<IonIcon icon={documentTextOutline} className="home-card-icon" />
+									<IonCardTitle className="home-card-title">Info Publicador</IonCardTitle>
+								</IonCardHeader>
+							</IonCard>
+						</IonCol>
+						<IonCol size="6" className="home-col">
+							<IonCard button onClick={() => history.push('/tabs/publs')} className="home-card">
+								<IonCardHeader>
+									<IonIcon icon={peopleOutline} className="home-card-icon" />
+									<IonCardTitle className="home-card-title">Gestión Publs</IonCardTitle>
 								</IonCardHeader>
 							</IonCard>
 						</IonCol>

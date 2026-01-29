@@ -102,27 +102,30 @@ const Settings: React.FC = () => {
 					</IonCardHeader>
 					<IonCardContent>
 						<IonItem>
-							<IonLabel position="stacked">Contraseña Actual</IonLabel>
 							<IonInput
 								type="password"
+								label="Contraseña Actual"
+								labelPlacement="stacked"
 								value={currentPassword}
-								onIonInput={(e) => setCurrentPassword(e.detail.value!)}
+								onIonInput={(e) => setCurrentPassword(e.detail.value as string)}
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Nueva Contraseña</IonLabel>
 							<IonInput
 								type="password"
+								label="Nueva Contraseña"
+								labelPlacement="stacked"
 								value={newPassword}
-								onIonInput={(e) => setNewPassword(e.detail.value!)}
+								onIonInput={(e) => setNewPassword(e.detail.value as string)}
 							/>
 						</IonItem>
 						<IonItem>
-							<IonLabel position="stacked">Confirmar Contraseña</IonLabel>
 							<IonInput
 								type="password"
+								label="Confirmar Contraseña"
+								labelPlacement="stacked"
 								value={confirmPassword}
-								onIonInput={(e) => setConfirmPassword(e.detail.value!)}
+								onIonInput={(e) => setConfirmPassword(e.detail.value as string)}
 							/>
 						</IonItem>
 						<IonButton expand="block" onClick={handleChangePassword} style={{ marginTop: '20px' }}>
@@ -155,18 +158,18 @@ const Settings: React.FC = () => {
 
 				<IonLoading isOpen={loading} message="Procesando..." />
 				<IonAlert
-					isOpen={!!error}
+					isOpen={Boolean(error)}
 					onDidDismiss={() => setError(null)}
 					header="Error"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', handler: () => setError(null) }]}
 				/>
 				<IonAlert
-					isOpen={!!success}
+					isOpen={Boolean(success)}
 					onDidDismiss={() => setSuccess(null)}
 					header="Éxito"
 					message={success || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', handler: () => setSuccess(null) }]}
 				/>
 			</IonContent>
 		</IonPage>
