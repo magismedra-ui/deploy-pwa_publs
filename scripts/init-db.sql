@@ -5,10 +5,10 @@ COLLATE utf8mb4_unicode_ci;
 USE tjpubls;
 
 -- =========================
--- GRUPO
+-- GRUPO (id numérico auto-increment)
 -- =========================
 CREATE TABLE grupo (
-  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  id INT AUTO_INCREMENT PRIMARY KEY,
   nombre TEXT NOT NULL,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   syncStatus ENUM('pending', 'synced', 'conflict') DEFAULT 'pending',
@@ -41,7 +41,7 @@ CREATE TABLE publicador (
   fecha_bautismo DATE,
   direccion TEXT,
   telefono_familiar BIGINT,
-  grupo CHAR(36),
+  grupo INT,
   observaciones TEXT,
   estado TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -117,8 +117,5 @@ CREATE TABLE addinfopubl (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================
--- DATA INICIAL
+-- DATA INICIAL (role, grupo, publicador y usuario se crean con init-user)
 -- =========================
-INSERT IGNORE INTO role (id, role)
-SELECT UUID(), 'admin'
-WHERE NOT EXISTS (SELECT 1 FROM role WHERE role = 'admin');

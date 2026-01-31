@@ -1,4 +1,5 @@
 import { Preferences } from '@capacitor/preferences'
+import { AuthUser } from '../types'
 
 const TOKEN_KEY = 'auth_token'
 const USER_KEY = 'user_data'
@@ -17,11 +18,11 @@ export const storage = {
 		await Preferences.remove({ key: TOKEN_KEY })
 	},
 
-	async setUser(user: any): Promise<void> {
+	async setUser(user: AuthUser): Promise<void> {
 		await Preferences.set({ key: USER_KEY, value: JSON.stringify(user) })
 	},
 
-	async getUser(): Promise<any | null> {
+	async getUser(): Promise<AuthUser | null> {
 		const { value } = await Preferences.get({ key: USER_KEY })
 		return value ? JSON.parse(value) : null
 	},

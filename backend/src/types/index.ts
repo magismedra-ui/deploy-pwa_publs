@@ -21,7 +21,7 @@ export interface Asistencia extends BaseEntity {
 }
 
 export interface Grupo extends BaseEntity {
-	id?: string
+	id?: number
 	nombre: string
 }
 
@@ -37,7 +37,7 @@ export interface Publicador extends BaseEntity {
 	fecha_bautismo?: Date | string
 	direccion?: string
 	telefono_familiar?: number
-	grupo?: string
+	grupo?: number
 	observaciones?: string
 	estado?: string
 	created_at?: Date | string
@@ -78,18 +78,15 @@ export interface LoginRequest {
 
 export interface AuthResponse {
 	token: string
-	usuario: {
-		id: string
-		email: string
-		idpublicador?: string
-		idrole: string
-	}
 }
 
 export interface JwtPayload {
-	userId: string
+	idusuario: string
+	nombre: string
+	rol: string
 	email: string
-	idrole: string
+	iat?: number
+	exp?: number
 }
 
 export interface ChangePasswordRequest {

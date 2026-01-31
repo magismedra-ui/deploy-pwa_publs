@@ -11,7 +11,8 @@ import {
 	IonGrid,
 	IonRow,
 	IonCol,
-	IonIcon
+	IonIcon,
+	IonText
 } from '@ionic/react'
 import { useHistory } from 'react-router-dom'
 import {
@@ -21,9 +22,11 @@ import {
 	personOutline,
 	settingsOutline
 } from 'ionicons/icons'
+import { useAuth } from '../hooks/useAuth'
 
 const Home: React.FC = () => {
 	const history = useHistory()
+	const { user } = useAuth()
 
 	return (
 		<IonPage className="home-page">
@@ -33,6 +36,11 @@ const Home: React.FC = () => {
 				</IonToolbar>
 			</IonHeader>
 			<IonContent fullscreen className="home-content">
+				{user?.userName && (
+					<IonText className="ion-padding">
+						<p>Hola, {user.userName}</p>
+					</IonText>
+				)}
 				<IonGrid className="home-grid">
 					<IonRow className="home-row">
 						<IonCol size="6" className="home-col">

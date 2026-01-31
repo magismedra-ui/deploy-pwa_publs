@@ -1,4 +1,6 @@
 import { UsuarioRepository } from '../repositories/usuario.repository'
+import { RoleRepository } from '../repositories/role.repository'
+import { PublicadorRepository } from '../repositories/publicador.repository'
 import { comparePassword, hashPassword } from '../utils/password'
 import { generateToken } from '../utils/jwt'
 import { LoginRequest, AuthResponse, Usuario } from '../types'
@@ -6,9 +8,13 @@ import { AppError } from '../middlewares/errorHandler'
 
 export class AuthService {
 	private usuarioRepository: UsuarioRepository
+	private roleRepository: RoleRepository
+	private publicadorRepository: PublicadorRepository
 
 	constructor() {
 		this.usuarioRepository = new UsuarioRepository()
+		this.roleRepository = new RoleRepository()
+		this.publicadorRepository = new PublicadorRepository()
 	}
 
 	async login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -28,21 +34,24 @@ export class AuthService {
 			throw error
 		}
 
+		const [role, publicador] = await Promise.all([
+			this.roleRepository.findById(usuario.idrole),
+			usuario.idpublicador
+				? this.publicadorRepository.findById(usuario.idpublicador)
+				: Promise.resolve(null)
+		])
+
+		const nombre = publicador?.nombre ?? usuario.email
+		const rol = role?.role ?? ''
+
 		const token = generateToken({
-			userId: usuario.id!,
-			email: usuario.email,
-			idrole: usuario.idrole
+			idusuario: usuario.id!,
+			nombre,
+			rol,
+			email: usuario.email
 		})
 
-		return {
-			token,
-			usuario: {
-				id: usuario.id!,
-				email: usuario.email,
-				idpublicador: usuario.idpublicador,
-				idrole: usuario.idrole
-			}
-		}
+		return { token }
 	}
 
 	async createUsuario(data: Omit<Usuario, 'id'>): Promise<Usuario> {

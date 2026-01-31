@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { authService } from '../services/auth.service'
-import { AuthResponse } from '../types'
+import { AuthResponse, AuthUser } from '../types'
 
 interface AuthContextType {
 	isAuthenticated: boolean
-	user: any | null
+	user: AuthUser | null
 	loading: boolean
 	login: (email: string, password: string) => Promise<AuthResponse>
 	logout: () => Promise<void>
@@ -27,7 +27,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
-	const [user, setUser] = useState<any | null>(null)
+	const [user, setUser] = useState<AuthUser | null>(null)
 	const [loading, setLoading] = useState<boolean>(true)
 
 	useEffect(() => {
@@ -51,7 +51,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	const login = async (email: string, password: string): Promise<AuthResponse> => {
 		const response = await authService.login({ email, password })
 		setIsAuthenticated(true)
-		setUser(response.usuario)
+		const currentUser = await authService.getCurrentUser()
+		setUser(currentUser)
 		return response
 	}
 
