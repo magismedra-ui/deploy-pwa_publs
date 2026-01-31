@@ -1,12 +1,12 @@
 import { apiService } from './api'
 import { storage } from '../utils/storage'
-import { LoginRequest, AuthResponse, ChangePasswordRequest } from '../types'
+import { userFromToken } from '../utils/jwt'
+import { LoginRequest, AuthResponse, AuthUser, ChangePasswordRequest } from '../types'
 
 export class AuthService {
 	async login(credentials: LoginRequest): Promise<AuthResponse> {
 		const response = await apiService.post<AuthResponse>('/auth/login', credentials)
 		await storage.setToken(response.token)
-		await storage.setUser(response.usuario)
 		return response
 	}
 
@@ -24,8 +24,10 @@ export class AuthService {
 		return !!token
 	}
 
-	async getCurrentUser(): Promise<any | null> {
-		return await storage.getUser()
+	async getCurrentUser(): Promise<AuthUser | null> {
+		const token = await storage.getToken()
+		if (!token) return null
+		return userFromToken(token)
 	}
 
 	async getToken(): Promise<string | null> {

@@ -89,6 +89,18 @@ const Settings: React.FC = () => {
 					<IonCardContent>
 						<IonItem>
 							<IonLabel>
+								<h2>Nombre</h2>
+								<p>{user?.userName ?? '—'}</p>
+							</IonLabel>
+						</IonItem>
+						<IonItem>
+							<IonLabel>
+								<h2>Rol</h2>
+								<p>{user?.roleName ?? '—'}</p>
+							</IonLabel>
+						</IonItem>
+						<IonItem>
+							<IonLabel>
 								<h2>Email</h2>
 								<p>{user?.email}</p>
 							</IonLabel>

@@ -98,7 +98,7 @@ export class UsuarioController {
 			}
 
 			await this.service.changePassword(
-				req.user.userId,
+				req.user.idusuario,
 				currentPassword,
 				newPassword
 			)

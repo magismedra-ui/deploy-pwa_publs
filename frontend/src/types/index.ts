@@ -20,6 +20,7 @@ export interface Asistencia extends BaseEntity {
 }
 
 export interface Grupo extends BaseEntity {
+	id?: number
 	nombre: string
 	nroGrupo?: number | null
 }
@@ -35,7 +36,7 @@ export interface Publicador extends BaseEntity {
 	fecha_bautismo?: Date | string
 	direccion?: string
 	telefono_familiar?: number
-	grupo?: string
+	grupo?: number
 	observaciones?: string
 	estado?: string
 	created_at?: Date | string
@@ -71,14 +72,26 @@ export interface LoginRequest {
 	password: string
 }
 
+export interface AuthUser {
+	id: string
+	email: string
+	idpublicador?: string
+	idrole: string
+	userName: string
+	roleName: string
+}
+
 export interface AuthResponse {
 	token: string
-	usuario: {
-		id: string
-		email: string
-		idpublicador?: string
-		idrole: string
-	}
+}
+
+export interface JwtPayloadDecoded {
+	idusuario: string
+	nombre: string
+	rol: string
+	email: string
+	iat?: number
+	exp?: number
 }
 
 export interface ChangePasswordRequest {

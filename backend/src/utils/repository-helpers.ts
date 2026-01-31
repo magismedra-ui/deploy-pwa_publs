@@ -25,16 +25,21 @@ export const buildUpdateQuery = (
 	return { updates, values }
 }
 
+export interface BuildCreateOptions {
+	skipId?: boolean
+}
+
 export const buildCreateQuery = (
 	data: Record<string, any>,
-	excludeFields: string[] = ['id', 'updatedAt']
+	excludeFields: string[] = ['id', 'updatedAt'],
+	options: BuildCreateOptions = {}
 ): { fields: string[]; placeholders: string[]; values: any[]; generatedId?: string } => {
 	const fields: string[] = []
 	const placeholders: string[] = []
 	const values: any[] = []
 	let generatedId: string | undefined
 
-	if (!data.id) {
+	if (!options.skipId && !data.id) {
 		generatedId = generateUUID()
 		fields.push('id')
 		placeholders.push('?')
