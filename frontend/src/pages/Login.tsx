@@ -75,16 +75,8 @@ const Login: React.FC = () => {
 	return (
 		<IonPage className="login-page">
 			<IonContent fullscreen className="ion-padding login-content">
-				<div className="login-container">
-					{/* Logo/Placeholder */}
-					<div className="login-logo">
-						<IonText>
-							<h1 className="login-title">TJPubls</h1>
-							<p className="login-subtitle">Gestión de Publicadores</p>
-						</IonText>
-					</div>
-
-					{/* Formulario */}
+				<div className="login-wrapper">
+					<div className="login-container">
 					<IonCard className="login-card">
 						<IonCardHeader>
 							<IonCardTitle className="login-card-title">Iniciar Sesión</IonCardTitle>
@@ -97,7 +89,6 @@ const Login: React.FC = () => {
 										type="email"
 										label="Email"
 										labelPlacement="stacked"
-										placeholder="tu@email.com"
 										required
 										autocomplete="email"
 										className="login-input"
@@ -109,7 +100,6 @@ const Login: React.FC = () => {
 										type="password"
 										label="Contraseña"
 										labelPlacement="stacked"
-										placeholder="Ingresa tu contraseña"
 										required
 										autocomplete="current-password"
 										className="login-input"
@@ -122,11 +112,12 @@ const Login: React.FC = () => {
 									disabled={loading}
 									className="login-button"
 								>
-									{loading ? 'Iniciando...' : 'Iniciar Sesión'}
+									{loading ? 'Iniciando...' : 'Entrar'}
 								</IonButton>
 							</form>
 						</IonCardContent>
 					</IonCard>
+					</div>
 				</div>
 				<IonLoading isOpen={loading} message="Iniciando sesión..." />
 				<IonAlert
