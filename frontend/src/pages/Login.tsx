@@ -23,10 +23,10 @@ const Login: React.FC = () => {
 	const { login, isAuthenticated } = useAuthContext()
 	const history = useHistory()
 
-	// Navegar cuando el usuario se autentique (solo si no estamos en la página de login)
+	// Navegar cuando el usuario se autentique (replace para no volver atrás al login)
 	useEffect(() => {
 		if (isAuthenticated && !loading && window.location.pathname === '/login') {
-			history.push('/tabs/home')
+			history.replace('/tabs/home')
 		}
 	}, [isAuthenticated, loading, history])
 

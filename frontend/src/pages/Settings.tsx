@@ -174,14 +174,14 @@ const Settings: React.FC = () => {
 					onDidDismiss={() => setError(null)}
 					header="Error"
 					message={error || ''}
-					buttons={[{ text: 'OK', handler: () => setError(null) }]}
+					buttons={['OK']}
 				/>
 				<IonAlert
 					isOpen={Boolean(success)}
 					onDidDismiss={() => setSuccess(null)}
 					header="Éxito"
 					message={success || ''}
-					buttons={[{ text: 'OK', handler: () => setSuccess(null) }]}
+					buttons={['OK']}
 				/>
 			</IonContent>
 		</IonPage>

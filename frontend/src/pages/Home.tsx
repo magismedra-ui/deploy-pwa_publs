@@ -259,14 +259,17 @@ function buildInformacionReciente(
 }
 
 const Home: React.FC = () => {
-	const { logout } = useAuth()
+	const { logout, user, isAuthenticated } = useAuth()
 	const [grupos, setGrupos] = useState<GrupoCard[]>([])
 	const [informacionReciente, setInformacionReciente] = useState<InfoRecienteItem[]>([])
 	const [loading, setLoading] = useState(true)
 	const [errorGrupos, setErrorGrupos] = useState<string | null>(null)
 	const [errorInfo, setErrorInfo] = useState<string | null>(null)
 
+	// Cargar datos al montar y cuando el usuario esté autenticado (p. ej. tras login)
 	useEffect(() => {
+		if (!isAuthenticated) return
+
 		let cancelled = false
 		const timeoutId = setTimeout(() => {
 			if (!cancelled) setLoading(false)
@@ -307,7 +310,7 @@ const Home: React.FC = () => {
 			cancelled = true
 			clearTimeout(timeoutId)
 		}
-	}, [])
+	}, [isAuthenticated])
 
 	const handleLogout = () => {
 		logout()
@@ -338,7 +341,7 @@ const Home: React.FC = () => {
 								20149
 							</IonCardSubtitle>
 							<IonCardSubtitle className={ styles.heading }>
-								Hernan Medrano
+								{user?.userName ?? 'Usuario'}
 							</IonCardSubtitle>
 						</IonCol>
 					</IonRow>
