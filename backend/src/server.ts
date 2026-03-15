@@ -17,8 +17,8 @@ const startServer = async () => {
 
 		const app = createApp()
 
-		app.listen(PORT, () => {
-			console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
+		app.listen(Number(PORT), '0.0.0.0', () => {
+			console.log(`🚀 Servidor corriendo en 0.0.0.0:${PORT}`)
 		})
 	} catch (error: unknown) {
 		console.error('❌ Error al iniciar servidor:', error)
