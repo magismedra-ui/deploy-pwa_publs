@@ -1,8 +1,9 @@
 # ── Stage 1: build ──────────────────────────────────────────────────────────
+# Construir con contexto = raíz del repo: docker build -f frontend/Dockerfile .
 FROM node:20-alpine AS builder
 WORKDIR /app
-# Copiar todo el contexto (dockerContext: ./frontend en Render) y luego instalar
-COPY . .
+# Contexto = raíz del repo; copiar solo la carpeta frontend
+COPY frontend/ ./
 # VITE_API_URL se pasa como build arg desde Render
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL

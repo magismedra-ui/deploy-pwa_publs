@@ -26,7 +26,7 @@ services:
     name: tjpubls-web
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
-    dockerContext: ./frontend
+    dockerContext: .
     envVars:
       - key: NODE_ENV
         value: production
