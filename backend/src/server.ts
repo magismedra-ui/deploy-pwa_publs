@@ -24,6 +24,18 @@ const startServer = async () => {
 		app.listen(Number(PORT), '0.0.0.0', () => {
 			console.log(`🚀 Servidor corriendo en 0.0.0.0:${PORT}`)
 		})
+
+		// ── Keep-alive: evita que Render duerma el servidor ──────────────
+		const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`
+		setInterval(async () => {
+			try {
+				await fetch(`${BACKEND_URL}/health`)
+				console.log('🔄 Keep-alive ping OK')
+			} catch (err) {
+				console.warn('⚠️ Keep-alive ping falló:', err)
+			}
+		}, 10 * 60 * 1000) // cada 10 minutos
+
 	} catch (error: unknown) {
 		console.error('❌ Error al iniciar servidor:', error)
 		const err = error as NodeJS.ErrnoException & { errors?: NodeJS.ErrnoException[] }
@@ -44,3 +56,4 @@ const startServer = async () => {
 }
 
 startServer()
+
