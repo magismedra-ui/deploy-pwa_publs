@@ -1,0 +1,223 @@
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TJPubls — Sistema de Estilos Global
+ * Extraído de: frontend/src/theme.css + frontend/src/pages/Home.module.scss
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * PALETA DE COLORES ORIGINAL (theme.css):
+ * ─────────────────────────────────────────
+ * --lighter-blue-color : #97B4FF  → headings, labels destacados
+ * --light-blue-color   : #3450A1  → fondo toolbar, fondo app, items
+ * --dark-blue-color    : #041955  → fondo items, fondo alertas
+ * --pink-color         : #EB06FF  → borde inferior tarjetas de grupo
+ * --blue-color         : #1D68DF  → azul genérico
+ * --ion-color-primary  : #97B4FF  → color primario Ionic
+ * --ion-color-secondary: #3dc2ff  → color secundario Ionic / highlightColor
+ * --ion-color-tertiary : #5260ff
+ * --ion-color-success  : #2dd36f
+ * --ion-color-warning  : #ffc409
+ * --ion-color-danger   : #eb445a
+ *
+ * COLORES DE GRUPOS (Home.tsx):
+ * ─────────────────────────────
+ * Grupo 1: #63e263 (verde)
+ * Grupo 2: #3dc2ff (azul claro)
+ * Grupo 3: #ffc409 (amarillo)
+ * Grupo 4: #eb445a (rojo)
+ * Grupo 5: #ff8c00 (naranja)
+ *
+ * TIPOGRAFÍA:
+ * ─────────────────────────────
+ * Font base: sistema (Ionic default)
+ * Heading principal: 2rem / 700
+ * Heading sección:   1rem / normal
+ * Texto tarjeta:     0.9rem
+ * Texto info reciente: 0.70rem – 0.90rem
+ *
+ * ESPACIADOS CLAVE:
+ * ─────────────────────────────
+ * Toolbar padding: 0.5rem H / 1rem top / 0 bottom
+ * Card border-radius: 22px
+ * Slider gap: 0 (scroll horizontal)
+ * Slider item width: 60%
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+/* ── Ionic CSS base — OBLIGATORIO en este orden ─────────────────────────── */
+@import '@ionic/react/css/core.css';
+@import '@ionic/react/css/normalize.css';
+@import '@ionic/react/css/structure.css';
+@import '@ionic/react/css/typography.css';
+@import '@ionic/react/css/padding.css';
+@import '@ionic/react/css/float-elements.css';
+@import '@ionic/react/css/text-alignment.css';
+@import '@ionic/react/css/text-transformation.css';
+@import '@ionic/react/css/flex-utils.css';
+@import '@ionic/react/css/display.css';
+
+/* ── Variables de tema TJPubls ──────────────────────────────────────────── */
+:root {
+	/* Paleta custom */
+	--lighter-blue-color: #97B4FF;
+	--light-blue-color:   #3450A1;
+	--dark-blue-color:    #041955;
+	--pink-color:         #EB06FF;
+	--blue-color:         #1D68DF;
+
+	/* Ionic primary */
+	--ion-color-primary:          #97B4FF;
+	--ion-color-primary-rgb:      151, 180, 255;
+	--ion-color-primary-contrast: #ffffff;
+	--ion-color-primary-contrast-rgb: 255, 255, 255;
+	--ion-color-primary-shade:    #7994d8;
+	--ion-color-primary-tint:     #5b7ed8;
+
+	/* Ionic secondary */
+	--ion-color-secondary:          #3dc2ff;
+	--ion-color-secondary-rgb:      61, 194, 255;
+	--ion-color-secondary-contrast: #ffffff;
+	--ion-color-secondary-contrast-rgb: 255, 255, 255;
+	--ion-color-secondary-shade:    #36abe0;
+	--ion-color-secondary-tint:     #50c8ff;
+
+	/* Ionic tertiary */
+	--ion-color-tertiary:          #5260ff;
+	--ion-color-tertiary-rgb:      82, 96, 255;
+	--ion-color-tertiary-contrast: #ffffff;
+	--ion-color-tertiary-contrast-rgb: 255, 255, 255;
+	--ion-color-tertiary-shade:    #4854e0;
+	--ion-color-tertiary-tint:     #6370ff;
+
+	/* Ionic success */
+	--ion-color-success:          #2dd36f;
+	--ion-color-success-rgb:      45, 211, 111;
+	--ion-color-success-contrast: #ffffff;
+	--ion-color-success-contrast-rgb: 255, 255, 255;
+	--ion-color-success-shade:    #28ba62;
+	--ion-color-success-tint:     #42d77d;
+
+	/* Ionic warning */
+	--ion-color-warning:          #ffc409;
+	--ion-color-warning-rgb:      255, 196, 9;
+	--ion-color-warning-contrast: #000000;
+	--ion-color-warning-contrast-rgb: 0, 0, 0;
+	--ion-color-warning-shade:    #e0ac08;
+	--ion-color-warning-tint:     #ffca22;
+
+	/* Ionic danger */
+	--ion-color-danger:          #eb445a;
+	--ion-color-danger-rgb:      235, 68, 90;
+	--ion-color-danger-contrast: #ffffff;
+	--ion-color-danger-contrast-rgb: 255, 255, 255;
+	--ion-color-danger-shade:    #cf3c4f;
+	--ion-color-danger-tint:     #ed576b;
+
+	/* Ionic dark */
+	--ion-color-dark:          #222428;
+	--ion-color-dark-rgb:      34, 36, 40;
+	--ion-color-dark-contrast: #ffffff;
+	--ion-color-dark-contrast-rgb: 255, 255, 255;
+	--ion-color-dark-shade:    #1e2023;
+	--ion-color-dark-tint:     #383a3e;
+
+	/* Ionic medium */
+	--ion-color-medium:          #92949c;
+	--ion-color-medium-rgb:      146, 148, 156;
+	--ion-color-medium-contrast: #ffffff;
+	--ion-color-medium-contrast-rgb: 255, 255, 255;
+	--ion-color-medium-shade:    #808289;
+	--ion-color-medium-tint:     #9d9fa6;
+
+	/* Ionic light */
+	--ion-color-light:          #f4f5f8;
+	--ion-color-light-rgb:      244, 245, 248;
+	--ion-color-light-contrast: #000000;
+	--ion-color-light-contrast-rgb: 0, 0, 0;
+	--ion-color-light-shade:    #d7d8da;
+	--ion-color-light-tint:     #f5f6f9;
+
+	/* Fondo y texto global */
+	--ion-background-color:       var(--light-blue-color);
+	--ion-text-color:             #ffffff;
+
+	/* Toolbar */
+	--ion-toolbar-background:     var(--light-blue-color);
+	--ion-toolbar-border-color:   var(--light-blue-color);
+	--ion-toolbar-color:          #ffffff;
+
+	/* Items */
+	--ion-item-background:        var(--dark-blue-color);
+	--ion-item-color:             #ffffff;
+
+	/* Tab bar */
+	--ion-tab-bar-background:     var(--light-blue-color);
+	--ion-tab-bar-color:          rgba(255, 255, 255, 0.6);
+	--ion-tab-bar-color-selected: #ffffff;
+
+	/* Colores de grupos (Home dashboard) */
+	--grupo-color-1: #63e263;
+	--grupo-color-2: #3dc2ff;
+	--grupo-color-3: #ffc409;
+	--grupo-color-4: #eb445a;
+	--grupo-color-5: #ff8c00;
+}
+
+/* ── Ionic component overrides ──────────────────────────────────────────── */
+ion-toolbar {
+	--padding-start:  0.5rem;
+	--padding-end:    0.5rem;
+	--padding-top:    1rem;
+	--padding-bottom: 0rem;
+}
+
+ion-alert {
+	--background: var(--dark-blue-color) !important;
+}
+
+/* ── Login layout ───────────────────────────────────────────────────────── */
+.login-page    { --background: var(--ion-background-color); }
+.login-content { --background: var(--ion-background-color); }
+
+.login-wrapper {
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	min-height:      100vh;
+	min-height:      100dvh;
+	width:           100%;
+	padding:         1rem;
+	box-sizing:      border-box;
+}
+
+.login-container {
+	width:     100%;
+	max-width: 400px;
+}
+
+.login-card {
+	margin:        0;
+	width:         100%;
+	border-radius: 16px;
+	box-shadow:    0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.login-card-title {
+	text-align: center;
+	color:      #ffffff;
+}
+
+.login-button {
+	padding-top: 1rem;
+	margin-top:  0.5rem;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+	.login-container {
+		max-width: 450px;
+	}
+	.home-grid {
+		max-width: 600px;
+		margin:    0 auto;
+	}
+}

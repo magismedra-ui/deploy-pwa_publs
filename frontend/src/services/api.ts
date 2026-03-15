@@ -2,7 +2,8 @@ import axios, { AxiosInstance, AxiosError } from 'axios'
 import { storage } from '../utils/storage'
 import { ApiResponse } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost/api/v1'
+const API_BASE_URL =
+	import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
 
 class ApiService {
 	private client: AxiosInstance

@@ -1,64 +1,46 @@
-import { getPool } from '../config/database'
+import pool from '../config/database'
 import { Grupo } from '../types'
-import { buildUpdateQuery, buildCreateQuery } from '../utils/repository-helpers'
-import { ResultSetHeader } from 'mysql2'
 
 export class GrupoRepository {
 	async findAll(): Promise<Grupo[]> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			`SELECT * FROM grupo WHERE (deleted = FALSE OR deleted IS NULL)
-			 ORDER BY COALESCE(nroGrupo, 999999) ASC, nombre ASC`
+		const result = await pool.query(
+			`SELECT id, nombre
+			 FROM grupo
+			 ORDER BY nombre ASC`
 		)
-		return rows as Grupo[]
+		return result.rows as Grupo[]
 	}
 
 	async findById(id: string | number): Promise<Grupo | null> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM grupo WHERE id = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const result = await pool.query(
+			`SELECT id, nombre FROM grupo WHERE id = $1`,
 			[id]
 		)
-		return (rows as Grupo[])[0] || null
+		return result.rows[0] || null
 	}
 
 	async create(data: Grupo): Promise<Grupo> {
-		const pool = getPool()
-		const { fields, placeholders, values } = buildCreateQuery(
-			data,
-			['id', 'updatedAt'],
-			{ skipId: true }
+		const result = await pool.query(
+			`INSERT INTO grupo (nombre) VALUES ($1) RETURNING id`,
+			[data.nombre]
 		)
-		const [result] = await pool.execute(
-			`INSERT INTO grupo (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`,
-			values
-		)
-		const insertId = (result as ResultSetHeader).insertId
-		return this.findById(insertId) as Promise<Grupo>
+		return this.findById(result.rows[0].id) as Promise<Grupo>
 	}
 
 	async update(id: string | number, data: Partial<Grupo>): Promise<Grupo | null> {
-		const pool = getPool()
-		const { updates, values } = buildUpdateQuery(data)
-
-		if (updates.length === 0) {
-			return this.findById(id)
-		}
-
-		values.push(id)
-		await pool.execute(
-			`UPDATE grupo SET ${updates.join(', ')} WHERE id = ?`,
-			values
+		const result = await pool.query(
+			`UPDATE grupo SET nombre=$1 WHERE id=$2 RETURNING id`,
+			[data.nombre ?? null, id]
 		)
+		if (result.rowCount === 0) return null
 		return this.findById(id)
 	}
 
 	async delete(id: string | number): Promise<boolean> {
-		const pool = getPool()
-		const [result] = await pool.execute(
-			"UPDATE grupo SET deleted = TRUE, syncStatus = 'pending', updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+		const result = await pool.query(
+			`DELETE FROM grupo WHERE id = $1`,
 			[id]
 		)
-		return (result as ResultSetHeader).affectedRows > 0
+		return (result.rowCount ?? 0) > 0
 	}
 }

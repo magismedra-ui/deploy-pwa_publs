@@ -1,9 +1,6 @@
 import {
 	IonContent,
 	IonPage,
-	IonHeader,
-	IonToolbar,
-	IonTitle,
 	IonItem,
 	IonInput,
 	IonButton,
@@ -13,7 +10,6 @@ import {
 	IonCardTitle,
 	IonLoading,
 	IonAlert,
-	IonText
 } from '@ionic/react'
 import { useState, FormEvent, useRef, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
@@ -125,7 +121,7 @@ const Login: React.FC = () => {
 					onDidDismiss={() => setError(null)}
 					header="Error de Autenticación"
 					message={error || ''}
-					buttons={[{ text: 'OK', handler: () => setError(null) }]}
+					buttons={['OK']}
 				/>
 			</IonContent>
 		</IonPage>

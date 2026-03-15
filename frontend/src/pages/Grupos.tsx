@@ -50,7 +50,7 @@ const Grupos: React.FC = () => {
 			const nro =
 				nroGrupo === '' ? null : Number(nroGrupo)
 			if (editingGrupo) {
-				await grupoRepository.update(editingGrupo.id!, {
+			await grupoRepository.update(editingGrupo.id! as unknown as string, {
 					nombre,
 					nroGrupo: nro
 				})
@@ -125,7 +125,7 @@ const Grupos: React.FC = () => {
 									<IonButton
 										fill="clear"
 										color="danger"
-										onClick={() => handleDelete(grupo.id!)}
+									onClick={() => handleDelete(grupo.id! as unknown as string)}
 									>
 										<IonIcon icon={trash} />
 									</IonButton>

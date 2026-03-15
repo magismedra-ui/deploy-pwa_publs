@@ -1,29 +1,22 @@
-import mysql from 'mysql2/promise'
-import { Pool } from 'mysql2/promise'
+import { Pool } from 'pg'
 
-let pool: Pool | null = null
+const connectionString = process.env.DATABASE_URL
 
-export const getPool = (): Pool => {
-	if (!pool) {
-		pool = mysql.createPool({
-			host: process.env.DB_HOST || 'localhost',
-			port: parseInt(process.env.DB_PORT || '3306'),
-			user: process.env.DB_USER || 'root',
-			password: process.env.DB_PASSWORD || '',
-			database: process.env.DB_NAME || 'tjpubls',
-			waitForConnections: true,
-			connectionLimit: 10,
-			queueLimit: 0,
-			enableKeepAlive: true,
-			keepAliveInitialDelay: 0
-		})
-	}
-	return pool
+if (!connectionString) {
+	throw new Error(
+		'DATABASE_URL no está definida. Crea un archivo .env en backend/ ' +
+			'copiando .env.example y asigna la URL de PostgreSQL (Neon o local).'
+	)
 }
 
-export const closePool = async (): Promise<void> => {
-	if (pool) {
-		await pool.end()
-		pool = null
-	}
-}
+const pool = new Pool({
+	connectionString,
+	ssl: connectionString.includes('sslmode=require')
+		? { rejectUnauthorized: false }
+		: false,
+	max: 10,
+	idleTimeoutMillis: 30000,
+	connectionTimeoutMillis: 10000,
+})
+
+export default pool

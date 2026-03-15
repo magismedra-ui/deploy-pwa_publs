@@ -1,16 +1,17 @@
 import { Router } from 'express'
-import { AddInfoPublController } from '../controllers/addinfopubl.controller'
 import { authenticate } from '../middlewares/auth'
 import { validateUUID } from '../middlewares/validateUUID'
+import * as ctrl from '../controllers/addinfopubl.controller'
 
 const router = Router()
-const controller = new AddInfoPublController()
 
-router.get('/', authenticate, controller.findAll)
-router.get('/:id', authenticate, validateUUID, controller.findById)
-router.get('/publicador/:idpublicador', authenticate, validateUUID, controller.findByPublicador)
-router.post('/', authenticate, controller.create)
-router.put('/:id', authenticate, validateUUID, controller.update)
-router.delete('/:id', authenticate, validateUUID, controller.delete)
+router.use(authenticate)
+
+router.get('/', ctrl.getAll)
+router.get('/publicador/:idpublicador', validateUUID, ctrl.getByPublicador)
+router.get('/:id', validateUUID, ctrl.getById)
+router.post('/', ctrl.create)
+router.put('/:id', validateUUID, ctrl.update)
+router.delete('/:id', validateUUID, ctrl.remove)
 
 export default router

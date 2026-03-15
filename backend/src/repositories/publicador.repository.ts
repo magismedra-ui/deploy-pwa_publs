@@ -1,66 +1,114 @@
-import { getPool } from '../config/database'
+import pool from '../config/database'
 import { Publicador } from '../types'
-import { buildUpdateQuery, buildCreateQuery } from '../utils/repository-helpers'
+import { generateUUID } from '../utils/uuid'
 
 export class PublicadorRepository {
 	async findAll(): Promise<Publicador[]> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM publicador WHERE (deleted = FALSE OR deleted IS NULL) ORDER BY nombre'
+		const result = await pool.query(
+			`SELECT id, nombre, correo, sexo, esperanza, privilegio, precursor,
+			        fecha_nacimiento, fecha_bautismo, direccion, telefono_familiar,
+			        telefono, grupo, capitan, auxiliar, estado, observaciones, created_at
+			 FROM publicador
+			 ORDER BY nombre`
 		)
-		return rows as Publicador[]
+		return result.rows as Publicador[]
 	}
 
 	async findById(id: string): Promise<Publicador | null> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM publicador WHERE id = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const result = await pool.query(
+			`SELECT id, nombre, correo, sexo, esperanza, privilegio, precursor,
+			        fecha_nacimiento, fecha_bautismo, direccion, telefono_familiar,
+			        telefono, grupo, capitan, auxiliar, estado, observaciones, created_at
+			 FROM publicador
+			 WHERE id = $1`,
 			[id]
 		)
-		return (rows as Publicador[])[0] || null
+		return result.rows[0] || null
 	}
 
 	async findByGrupo(grupo: string): Promise<Publicador[]> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM publicador WHERE grupo = ? AND (deleted = FALSE OR deleted IS NULL) ORDER BY nombre',
+		const result = await pool.query(
+			`SELECT id, nombre, correo, sexo, esperanza, privilegio, precursor,
+			        fecha_nacimiento, fecha_bautismo, direccion, telefono_familiar,
+			        telefono, grupo, capitan, auxiliar, estado, observaciones, created_at
+			 FROM publicador
+			 WHERE grupo = $1
+			 ORDER BY nombre`,
 			[grupo]
 		)
-		return rows as Publicador[]
+		return result.rows as Publicador[]
 	}
 
 	async create(data: Publicador): Promise<Publicador> {
-		const pool = getPool()
-		const { fields, placeholders, values, generatedId } = buildCreateQuery(data, ['id', 'updatedAt', 'created_at'])
-		await pool.execute(
-			`INSERT INTO publicador (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`,
-			values
+		const id = generateUUID()
+		const result = await pool.query(
+			`INSERT INTO publicador (
+				id, nombre, correo, sexo, esperanza, privilegio, precursor,
+				fecha_nacimiento, fecha_bautismo, direccion, telefono_familiar,
+				telefono, grupo, capitan, auxiliar, estado, observaciones
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+			RETURNING id`,
+			[
+				id,
+				data.nombre,
+				data.correo ?? null,
+				data.sexo ?? null,
+				data.esperanza ?? null,
+				data.privilegio ?? null,
+				data.precursor ?? null,
+				data.fecha_nacimiento ?? null,
+				data.fecha_bautismo ?? null,
+				data.direccion ?? null,
+				data.telefono_familiar ?? null,
+				data.telefono ?? null,
+				data.grupo ?? null,
+				data.capitan ?? false,
+				data.auxiliar ?? false,
+				data.estado ?? null,
+				data.observaciones ?? null,
+			]
 		)
-		return this.findById(generatedId!) as Promise<Publicador>
+		return this.findById(result.rows[0].id) as Promise<Publicador>
 	}
 
 	async update(id: string, data: Partial<Publicador>): Promise<Publicador | null> {
-		const pool = getPool()
-		const { updates, values } = buildUpdateQuery(data, ['id', 'created_at'])
-
-		if (updates.length === 0) {
-			return this.findById(id)
-		}
-
-		values.push(id)
-		await pool.execute(
-			`UPDATE publicador SET ${updates.join(', ')} WHERE id = ?`,
-			values
+		const result = await pool.query(
+			`UPDATE publicador
+			 SET nombre=$1, correo=$2, sexo=$3, esperanza=$4,
+			     privilegio=$5, precursor=$6, fecha_nacimiento=$7, fecha_bautismo=$8,
+			     direccion=$9, telefono_familiar=$10, telefono=$11, grupo=$12,
+			     capitan=$13, auxiliar=$14, estado=$15, observaciones=$16
+			 WHERE id=$17
+			 RETURNING id`,
+			[
+				data.nombre ?? null,
+				data.correo ?? null,
+				data.sexo ?? null,
+				data.esperanza ?? null,
+				data.privilegio ?? null,
+				data.precursor ?? null,
+				data.fecha_nacimiento ?? null,
+				data.fecha_bautismo ?? null,
+				data.direccion ?? null,
+				data.telefono_familiar ?? null,
+				data.telefono ?? null,
+				data.grupo ?? null,
+				data.capitan ?? false,
+				data.auxiliar ?? false,
+				data.estado ?? null,
+				data.observaciones ?? null,
+				id,
+			]
 		)
+		if (result.rowCount === 0) return null
 		return this.findById(id)
 	}
 
 	async delete(id: string): Promise<boolean> {
-		const pool = getPool()
-		const [result] = await pool.execute(
-			"UPDATE publicador SET deleted = TRUE, syncStatus = 'pending', updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+		const result = await pool.query(
+			`DELETE FROM publicador WHERE id = $1`,
 			[id]
 		)
-		return (result as any).affectedRows > 0
+		return (result.rowCount ?? 0) > 0
 	}
 }
