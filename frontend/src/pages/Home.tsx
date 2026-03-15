@@ -368,7 +368,14 @@ const Home: React.FC = () => {
 						</p>
 					</div>
 				) }
-				{ !loading && !errorGrupos && (
+				{ !loading && !errorGrupos && grupos.length === 0 && (
+					<div className="ion-padding ion-text-center">
+						<p className={styles.slideCountText} style={{ color: 'var(--ion-color-medium)' }}>
+							No hay grupos. Ejecuta init-user en la base de producción (Neon).
+						</p>
+					</div>
+				) }
+				{ !loading && !errorGrupos && grupos.length > 0 && (
 				<div id="slider" className={ `${styles.categorySlider} ion-padding-bottom` } role="region" aria-label="Grupos">
 					{ grupos.map((category, index) => (
 						<div key={ `categorySlide_${index}` } className={ styles.slideItem }>

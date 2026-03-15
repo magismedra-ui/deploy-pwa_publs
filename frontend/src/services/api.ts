@@ -47,10 +47,10 @@ class ApiService {
 
 	async get<T>(url: string): Promise<T> {
 		const { data } = await this.client.get<ApiResponse<T>>(url)
-		if (!data.success || !data.data) {
+		if (!data.success) {
 			throw new Error(data.error?.message || 'Error en la petición')
 		}
-		return data.data
+		return data.data as T
 	}
 
 	async post<T>(url: string, payload?: any): Promise<T> {
