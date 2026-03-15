@@ -1,18 +1,17 @@
-FROM node:20-alpine
-
-RUN apk add --no-cache netcat-openbsd dos2unix
-
+# ── Stage 1: build ──────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
 WORKDIR /app
-
 COPY package*.json ./
-
-RUN npm install
-
+RUN npm ci
 COPY . .
+RUN npm run build
 
-RUN dos2unix entrypoint.sh 2>/dev/null || true && \
-	chmod +x entrypoint.sh
-
+# ── Stage 2: runner (producción) ────────────────────────────────────────────
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+RUN npm ci --only=production
 EXPOSE 3000
-
-ENTRYPOINT ["/bin/sh", "entrypoint.sh"]
+CMD ["node", "dist/server.js"]

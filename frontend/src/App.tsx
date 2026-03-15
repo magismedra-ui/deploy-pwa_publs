@@ -1,7 +1,9 @@
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react'
 import { IonReactRouter } from '@ionic/react-router'
 import { Redirect, Route } from 'react-router-dom'
-import { useEffect } from 'react'
+import { type ComponentType, type FC, type ReactNode, useEffect } from 'react'
+
+const Router = IonReactRouter as ComponentType<{ children?: ReactNode }>
 import { Capacitor } from '@capacitor/core'
 import { StatusBar, Style } from '@capacitor/status-bar'
 
@@ -27,7 +29,7 @@ import './theme.css'
 
 setupIonicReact()
 
-const App: React.FC = () => {
+const App: FC = () => {
 	useEffect(() => {
 		const initializeApp = async () => {
 			if (Capacitor.isNativePlatform()) {
@@ -47,7 +49,7 @@ const App: React.FC = () => {
 	return (
 		<IonApp>
 			<AuthProvider>
-				<IonReactRouter>
+				<Router>
 					<IonRouterOutlet>
 						<PublicRoute exact path="/login">
 							<Login />
@@ -62,7 +64,7 @@ const App: React.FC = () => {
 							<Redirect to="/tabs/home" />
 						</Route>
 					</IonRouterOutlet>
-				</IonReactRouter>
+				</Router>
 			</AuthProvider>
 		</IonApp>
 	)

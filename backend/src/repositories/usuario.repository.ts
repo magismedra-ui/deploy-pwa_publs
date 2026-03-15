@@ -1,66 +1,84 @@
-import { getPool } from '../config/database'
+import pool from '../config/database'
 import { Usuario } from '../types'
-import { buildUpdateQuery, buildCreateQuery } from '../utils/repository-helpers'
+import { generateUUID } from '../utils/uuid'
 
 export class UsuarioRepository {
 	async findAll(): Promise<Usuario[]> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT id, idpublicador, idrole, email, updatedAt, syncStatus, deleted FROM usuario WHERE (deleted = FALSE OR deleted IS NULL) ORDER BY email'
+		const result = await pool.query(
+			`SELECT id, idpublicador, idrole, email
+			 FROM usuario
+			 ORDER BY email`
 		)
-		return rows as Usuario[]
+		return result.rows as Usuario[]
 	}
 
 	async findById(id: string): Promise<Usuario | null> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT id, idpublicador, idrole, email, updatedAt, syncStatus, deleted FROM usuario WHERE id = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const result = await pool.query(
+			`SELECT id, idpublicador, idrole, email
+			 FROM usuario
+			 WHERE id = $1`,
 			[id]
 		)
-		return (rows as Usuario[])[0] || null
+		return result.rows[0] || null
 	}
 
 	async findByEmail(email: string): Promise<Usuario | null> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM usuario WHERE email = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const result = await pool.query(
+			`SELECT id, idpublicador, idrole, email, password
+			 FROM usuario
+			 WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))`,
 			[email]
 		)
-		return (rows as Usuario[])[0] || null
+		return result.rows[0] || null
 	}
 
 	async create(data: Usuario): Promise<Usuario> {
-		const pool = getPool()
-		const { fields, placeholders, values, generatedId } = buildCreateQuery(data, ['id', 'updatedAt'])
-		await pool.execute(
-			`INSERT INTO usuario (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`,
-			values
+		const id = generateUUID()
+		const result = await pool.query(
+			`INSERT INTO usuario (id, idpublicador, idrole, email, password)
+			 VALUES ($1, $2, $3, $4, $5)
+			 RETURNING id`,
+			[
+				id,
+				data.idpublicador ?? null,
+				data.idrole,
+				data.email,
+				data.password,
+			]
 		)
-		return this.findById(generatedId!) as Promise<Usuario>
+		return this.findById(result.rows[0].id) as Promise<Usuario>
 	}
 
 	async update(id: string, data: Partial<Usuario>): Promise<Usuario | null> {
-		const pool = getPool()
-		const { updates, values } = buildUpdateQuery(data, ['id', 'created_at', 'password'])
-
-		if (updates.length === 0) {
-			return this.findById(id)
-		}
-
-		values.push(id)
-		await pool.execute(
-			`UPDATE usuario SET ${updates.join(', ')} WHERE id = ?`,
-			values
+		const result = await pool.query(
+			`UPDATE usuario
+			 SET idpublicador=$1, idrole=$2, email=$3
+			 WHERE id=$4
+			 RETURNING id`,
+			[
+				data.idpublicador ?? null,
+				data.idrole ?? null,
+				data.email ?? null,
+				id,
+			]
 		)
+		if (result.rowCount === 0) return null
 		return this.findById(id)
 	}
 
+	async updatePassword(id: string, hashedPassword: string): Promise<boolean> {
+		const result = await pool.query(
+			`UPDATE usuario SET password=$1 WHERE id=$2`,
+			[hashedPassword, id]
+		)
+		return (result.rowCount ?? 0) > 0
+	}
+
 	async delete(id: string): Promise<boolean> {
-		const pool = getPool()
-		const [result] = await pool.execute(
-			"UPDATE usuario SET deleted = TRUE, syncStatus = 'pending', updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+		const result = await pool.query(
+			`DELETE FROM usuario WHERE id = $1`,
 			[id]
 		)
-		return (result as any).affectedRows > 0
+		return (result.rowCount ?? 0) > 0
 	}
 }

@@ -1,66 +1,77 @@
-import { getPool } from '../config/database'
+import pool from '../config/database'
 import { AddInfoPubl } from '../types'
-import { buildUpdateQuery, buildCreateQuery } from '../utils/repository-helpers'
+import { generateUUID } from '../utils/uuid'
+
+export interface AddInfoPublWithPublicador extends AddInfoPubl {
+	publicador_nombre?: string
+}
 
 export class AddInfoPublRepository {
-	async findAll(): Promise<AddInfoPubl[]> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM addinfopubl WHERE (deleted = FALSE OR deleted IS NULL) ORDER BY id DESC'
+	async findAll(): Promise<AddInfoPublWithPublicador[]> {
+		const result = await pool.query(
+			`SELECT a.*, p.nombre AS publicador_nombre
+			 FROM addinfopubl a
+			 JOIN publicador p ON a.idpublicador = p.id
+			 ORDER BY a.fecha DESC`
 		)
-		return rows as AddInfoPubl[]
+		return result.rows as AddInfoPublWithPublicador[]
 	}
 
 	async findById(id: string): Promise<AddInfoPubl | null> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM addinfopubl WHERE id = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const result = await pool.query(
+			`SELECT * FROM addinfopubl WHERE id = $1`,
 			[id]
 		)
-		return (rows as AddInfoPubl[])[0] || null
+		return result.rows[0] || null
 	}
 
 	async findByPublicador(idpublicador: string): Promise<AddInfoPubl[]> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM addinfopubl WHERE idpublicador = ? AND (deleted = FALSE OR deleted IS NULL) ORDER BY fecha DESC',
+		const result = await pool.query(
+			`SELECT * FROM addinfopubl
+			 WHERE idpublicador = $1
+			 ORDER BY fecha DESC`,
 			[idpublicador]
 		)
-		return rows as AddInfoPubl[]
+		return result.rows as AddInfoPubl[]
 	}
 
-	async create(data: AddInfoPubl): Promise<AddInfoPubl> {
-		const pool = getPool()
-		const { fields, placeholders, values, generatedId } = buildCreateQuery(data)
-		await pool.execute(
-			`INSERT INTO addinfopubl (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`,
-			values
+	async create(data: { idpublicador: string; fecha?: string | Date | null; observaciones?: string | null }): Promise<AddInfoPubl> {
+		const id = generateUUID()
+		const result = await pool.query(
+			`INSERT INTO addinfopubl (id, idpublicador, fecha, observaciones)
+			 VALUES ($1, $2, $3, $4)
+			 RETURNING *`,
+			[
+				id,
+				data.idpublicador,
+				data.fecha ?? null,
+				data.observaciones ?? null,
+			]
 		)
-		return this.findById(generatedId!) as Promise<AddInfoPubl>
+		return result.rows[0] as AddInfoPubl
 	}
 
-	async update(id: string, data: Partial<AddInfoPubl>): Promise<AddInfoPubl | null> {
-		const pool = getPool()
-		const { updates, values } = buildUpdateQuery(data)
-
-		if (updates.length === 0) {
-			return this.findById(id)
-		}
-
-		values.push(id)
-		await pool.execute(
-			`UPDATE addinfopubl SET ${updates.join(', ')} WHERE id = ?`,
-			values
+	async update(id: string, data: { fecha?: string | Date | null; observaciones?: string | null }): Promise<AddInfoPubl | null> {
+		const result = await pool.query(
+			`UPDATE addinfopubl
+			 SET fecha = $1, observaciones = $2
+			 WHERE id = $3
+			 RETURNING *`,
+			[
+				data.fecha ?? null,
+				data.observaciones ?? null,
+				id,
+			]
 		)
-		return this.findById(id)
+		if (result.rowCount === 0) return null
+		return result.rows[0] as AddInfoPubl
 	}
 
 	async delete(id: string): Promise<boolean> {
-		const pool = getPool()
-		const [result] = await pool.execute(
-			"UPDATE addinfopubl SET deleted = TRUE, syncStatus = 'pending', updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+		const result = await pool.query(
+			`DELETE FROM addinfopubl WHERE id = $1 RETURNING id`,
 			[id]
 		)
-		return (result as any).affectedRows > 0
+		return (result.rowCount ?? 0) > 0
 	}
 }

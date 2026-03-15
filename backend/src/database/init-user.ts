@@ -1,9 +1,7 @@
-import dotenv from 'dotenv'
-import { getPool } from '../config/database'
+import 'dotenv/config'
+import pool from '../config/database'
 import { hashPassword } from '../utils/password'
 import { generateUUID } from '../utils/uuid'
-
-dotenv.config()
 
 const DEFAULT_EMAIL = 'magismedra@gmail.com'
 const DEFAULT_PASSWORD = 'h8m5d4'
@@ -11,8 +9,7 @@ const DEFAULT_PASSWORD = 'h8m5d4'
 const waitForDB = async (maxRetries = 30): Promise<void> => {
 	for (let i = 0; i < maxRetries; i++) {
 		try {
-			const pool = getPool()
-			await pool.execute('SELECT 1')
+			await pool.query('SELECT 1')
 			return
 		} catch (error) {
 			if (i === maxRetries - 1) {
@@ -26,61 +23,60 @@ const waitForDB = async (maxRetries = 30): Promise<void> => {
 const initUser = async () => {
 	try {
 		await waitForDB()
-		const pool = getPool()
 
 		// 1. Role: id UUID, role "Admin"
 		let roleId: string
-		const [roles] = await pool.execute(
-			"SELECT id FROM role WHERE role = 'Admin' AND (deleted = FALSE OR deleted IS NULL)"
+		const rolesResult = await pool.query(
+			"SELECT id FROM role WHERE role = 'Admin'"
 		)
-		const existingRole = (roles as { id: string }[])[0]
+		const existingRole = rolesResult.rows[0] as { id: string } | undefined
 		if (existingRole) {
 			roleId = existingRole.id
 			console.log('ℹ️  Rol Admin ya existe')
 		} else {
 			roleId = generateUUID()
-			await pool.execute(
-				'INSERT INTO role (id, role) VALUES (?, ?)',
+			await pool.query(
+				'INSERT INTO role (id, role) VALUES ($1, $2)',
 				[roleId, 'Admin']
 			)
 			console.log('✅ Rol Admin creado')
 		}
 
-		// 2. Grupo: id auto-increment, nombre "GRUPO 1"
-		let grupoId: number
-		const [grupos] = await pool.execute(
-			"SELECT id FROM grupo WHERE nombre = 'GRUPO 1' AND (deleted = FALSE OR deleted IS NULL)"
+		// 2. Grupo: nombre "GRUPO 1"
+		let grupoId: string
+		const gruposResult = await pool.query(
+			"SELECT id FROM grupo WHERE nombre = 'GRUPO 1'"
 		)
-		const existingGrupo = (grupos as { id: number }[])[0]
+		const existingGrupo = gruposResult.rows[0] as { id: string } | undefined
 		if (existingGrupo) {
 			grupoId = existingGrupo.id
 			console.log('ℹ️  Grupo GRUPO 1 ya existe')
 		} else {
-			const [resGrupo] = await pool.execute(
-				'INSERT INTO grupo (nombre) VALUES (?)',
+			const resGrupo = await pool.query(
+				'INSERT INTO grupo (nombre) VALUES ($1) RETURNING id',
 				['GRUPO 1']
 			)
-			grupoId = (resGrupo as { insertId: number }).insertId
+			grupoId = resGrupo.rows[0].id
 			console.log('✅ Grupo GRUPO 1 creado (id: ' + grupoId + ')')
 		}
 
 		// 3. Publicador
-		const [publs] = await pool.execute(
-			'SELECT id FROM publicador WHERE correo = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const publsResult = await pool.query(
+			'SELECT id FROM publicador WHERE correo = $1',
 			[DEFAULT_EMAIL]
 		)
 		let publicadorId: string
-		if ((publs as { id: string }[]).length > 0) {
-			publicadorId = (publs as { id: string }[])[0].id
+		if (publsResult.rows.length > 0) {
+			publicadorId = publsResult.rows[0].id
 			console.log('ℹ️  Publicador ya existe')
 		} else {
 			publicadorId = generateUUID()
-			await pool.execute(
+			await pool.query(
 				`INSERT INTO publicador (
 					id, nombre, correo, sexo, esperanza, privilegio, precursor,
 					fecha_nacimiento, fecha_bautismo, direccion, telefono_familiar,
 					grupo, observaciones, estado, capitan, auxiliar, telefono
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
 				[
 					publicadorId,
 					'HERNAN MEDRANO VILLADIEGO',
@@ -105,15 +101,15 @@ const initUser = async () => {
 		}
 
 		// 4. Usuario
-		const [users] = await pool.execute(
-			'SELECT id FROM usuario WHERE email = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const usersResult = await pool.query(
+			'SELECT id FROM usuario WHERE email = $1',
 			[DEFAULT_EMAIL]
 		)
-		if ((users as { id: string }[]).length === 0) {
+		if (usersResult.rows.length === 0) {
 			const hashedPassword = await hashPassword(DEFAULT_PASSWORD)
 			const usuarioId = generateUUID()
-			await pool.execute(
-				'INSERT INTO usuario (id, email, idpublicador, idrole, password) VALUES (?, ?, ?, ?, ?)',
+			await pool.query(
+				'INSERT INTO usuario (id, email, idpublicador, idrole, password) VALUES ($1,$2,$3,$4,$5)',
 				[usuarioId, DEFAULT_EMAIL, publicadorId, roleId, hashedPassword]
 			)
 			console.log('✅ Usuario creado: ' + DEFAULT_EMAIL)
@@ -122,8 +118,8 @@ const initUser = async () => {
 		}
 	} catch (error: unknown) {
 		const err = error as { code?: string; message?: string }
-		if (err.code === 'ER_NO_SUCH_TABLE' || err.message?.includes("doesn't exist")) {
-			console.log('⚠️  Las tablas aún no están creadas. Ejecute init-db y vuelva a correr init-user.')
+		if (err.message?.includes('does not exist') || err.message?.includes('relation')) {
+			console.log('⚠️  Las tablas aún no están creadas. Verifique el schema en Neon.')
 		} else {
 			console.error('❌ Error al inicializar usuario:', err.message || error)
 		}

@@ -14,13 +14,17 @@ export const errorHandler = (
 	const statusCode = err.statusCode || 500
 	const message = err.message || 'Error interno del servidor'
 
-	console.error('Error:', {
-		message: err.message,
-		stack: err.stack,
-		statusCode,
-		path: req.path,
-		method: req.method
-	})
+	if (statusCode === 401) {
+		console.warn(`[401] ${req.method} ${req.path} — ${message}`)
+	} else {
+		console.error('Error:', {
+			message: err.message,
+			stack: err.stack,
+			statusCode,
+			path: req.path,
+			method: req.method
+		})
+	}
 
 	res.status(statusCode).json({
 		success: false,

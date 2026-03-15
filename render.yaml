@@ -1,0 +1,33 @@
+services:
+  # ── Backend API (Node.js + PostgreSQL Neon) ──────────────────────────────
+  - type: web
+    name: tjpubls-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # configurar manualmente en Render dashboard
+      - key: JWT_SECRET
+        sync: false          # configurar manualmente en Render dashboard
+      - key: FRONTEND_URL
+        sync: false          # URL del frontend en Render, ej: https://tjpubls-web.onrender.com
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+    healthCheckPath: /health
+    plan: free
+
+  # ── Frontend (React + Ionic PWA) ─────────────────────────────────────────
+  - type: web
+    name: tjpubls-web
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    envVars:
+      - key: VITE_API_URL
+        sync: false          # URL del backend en Render, ej: https://tjpubls-api.onrender.com/api/v1
+      - key: NODE_ENV
+        value: production
+    plan: free

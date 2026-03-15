@@ -21,9 +21,11 @@ export const userFromToken = (token: string): AuthUser | null => {
 	const payload = decodeJwtPayload(token)
 	if (!payload) return null
 	return {
-		id: payload.idusuario,
-		email: payload.email,
-		userName: payload.nombre,
-		roleName: payload.rol
+		id:            payload.idusuario,
+		email:         payload.email,
+		userName:      payload.nombre,
+		roleName:      payload.rol,
+		idrole:        payload.rol,   // alias requerido por AuthUser
+		idpublicador:  undefined,
 	}
 }

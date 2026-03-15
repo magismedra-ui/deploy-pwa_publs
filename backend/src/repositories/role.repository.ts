@@ -1,57 +1,46 @@
-import { getPool } from '../config/database'
+import pool from '../config/database'
 import { Role } from '../types'
-import { buildUpdateQuery, buildCreateQuery } from '../utils/repository-helpers'
+import { generateUUID } from '../utils/uuid'
 
 export class RoleRepository {
 	async findAll(): Promise<Role[]> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM role WHERE (deleted = FALSE OR deleted IS NULL) ORDER BY role'
+		const result = await pool.query(
+			`SELECT id, role FROM role ORDER BY role`
 		)
-		return rows as Role[]
+		return result.rows as Role[]
 	}
 
 	async findById(id: string): Promise<Role | null> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM role WHERE id = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const result = await pool.query(
+			`SELECT id, role FROM role WHERE id = $1`,
 			[id]
 		)
-		return (rows as Role[])[0] || null
+		return result.rows[0] || null
 	}
 
 	async create(data: Role): Promise<Role> {
-		const pool = getPool()
-		const { fields, placeholders, values, generatedId } = buildCreateQuery(data)
-		await pool.execute(
-			`INSERT INTO role (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`,
-			values
+		const id = generateUUID()
+		const result = await pool.query(
+			`INSERT INTO role (id, role) VALUES ($1, $2) RETURNING id`,
+			[id, data.role]
 		)
-		return this.findById(generatedId!) as Promise<Role>
+		return this.findById(result.rows[0].id) as Promise<Role>
 	}
 
 	async update(id: string, data: Partial<Role>): Promise<Role | null> {
-		const pool = getPool()
-		const { updates, values } = buildUpdateQuery(data)
-
-		if (updates.length === 0) {
-			return this.findById(id)
-		}
-
-		values.push(id)
-		await pool.execute(
-			`UPDATE role SET ${updates.join(', ')} WHERE id = ?`,
-			values
+		const result = await pool.query(
+			`UPDATE role SET role=$1 WHERE id=$2 RETURNING id`,
+			[data.role ?? null, id]
 		)
+		if (result.rowCount === 0) return null
 		return this.findById(id)
 	}
 
 	async delete(id: string): Promise<boolean> {
-		const pool = getPool()
-		const [result] = await pool.execute(
-			"UPDATE role SET deleted = TRUE, syncStatus = 'pending', updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+		const result = await pool.query(
+			`DELETE FROM role WHERE id = $1`,
 			[id]
 		)
-		return (result as any).affectedRows > 0
+		return (result.rowCount ?? 0) > 0
 	}
 }

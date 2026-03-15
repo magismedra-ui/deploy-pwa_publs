@@ -1,57 +1,65 @@
-import { getPool } from '../config/database'
+import pool from '../config/database'
 import { Asistencia } from '../types'
-import { buildUpdateQuery, buildCreateQuery } from '../utils/repository-helpers'
+import { generateUUID } from '../utils/uuid'
 
 export class AsistenciaRepository {
 	async findAll(): Promise<Asistencia[]> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM asistencia WHERE (deleted = FALSE OR deleted IS NULL) ORDER BY fecha DESC'
+		const result = await pool.query(
+			`SELECT id, fecha, presencial, zoom
+			 FROM asistencia
+			 ORDER BY fecha DESC`
 		)
-		return rows as Asistencia[]
+		return result.rows as Asistencia[]
 	}
 
 	async findById(id: string): Promise<Asistencia | null> {
-		const pool = getPool()
-		const [rows] = await pool.execute(
-			'SELECT * FROM asistencia WHERE id = ? AND (deleted = FALSE OR deleted IS NULL)',
+		const result = await pool.query(
+			`SELECT id, fecha, presencial, zoom
+			 FROM asistencia
+			 WHERE id = $1`,
 			[id]
 		)
-		return (rows as Asistencia[])[0] || null
+		return result.rows[0] || null
 	}
 
 	async create(data: Asistencia): Promise<Asistencia> {
-		const pool = getPool()
-		const { fields, placeholders, values, generatedId } = buildCreateQuery(data)
-		await pool.execute(
-			`INSERT INTO asistencia (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`,
-			values
+		const id = generateUUID()
+		const result = await pool.query(
+			`INSERT INTO asistencia (id, fecha, presencial, zoom)
+			 VALUES ($1, $2, $3, $4)
+			 RETURNING id`,
+			[
+				id,
+				data.fecha,
+				data.presencial ?? null,
+				data.zoom ?? null,
+			]
 		)
-		return this.findById(generatedId!) as Promise<Asistencia>
+		return this.findById(result.rows[0].id) as Promise<Asistencia>
 	}
 
 	async update(id: string, data: Partial<Asistencia>): Promise<Asistencia | null> {
-		const pool = getPool()
-		const { updates, values } = buildUpdateQuery(data)
-
-		if (updates.length === 0) {
-			return this.findById(id)
-		}
-
-		values.push(id)
-		await pool.execute(
-			`UPDATE asistencia SET ${updates.join(', ')} WHERE id = ?`,
-			values
+		const result = await pool.query(
+			`UPDATE asistencia
+			 SET fecha=$1, presencial=$2, zoom=$3
+			 WHERE id=$4
+			 RETURNING id`,
+			[
+				data.fecha ?? null,
+				data.presencial ?? null,
+				data.zoom ?? null,
+				id,
+			]
 		)
+		if (result.rowCount === 0) return null
 		return this.findById(id)
 	}
 
 	async delete(id: string): Promise<boolean> {
-		const pool = getPool()
-		const [result] = await pool.execute(
-			"UPDATE asistencia SET deleted = TRUE, syncStatus = 'pending', updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+		const result = await pool.query(
+			`DELETE FROM asistencia WHERE id = $1`,
 			[id]
 		)
-		return (result as any).affectedRows > 0
+		return (result.rowCount ?? 0) > 0
 	}
 }

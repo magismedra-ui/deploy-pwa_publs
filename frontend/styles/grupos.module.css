@@ -1,0 +1,77 @@
+/*
+ * grupos.module.css
+ * Estilos para la página/componente de Grupos.
+ * Coherente con el sistema de colores TJPubls.
+ * Los colores de grupo se toman de las variables --grupo-color-N en globals.css
+ */
+
+/* ── Tarjeta de grupo ───────────────────────────────────────────────────── */
+.grupoCard {
+	border-radius: 22px;
+	margin-bottom: 1rem;
+	box-shadow:
+		0 0.7px 0.9px rgba(0, 0, 0, 0.101),
+		0 1.9px 2.5px rgba(0, 0, 0, 0.145),
+		0 4.5px 6px   rgba(0, 0, 0, 0.189),
+		0 15px 20px   rgba(0, 0, 0, 0.29);
+}
+
+.grupoHeader {
+	padding:     1rem 1.5rem 0.5rem;
+	text-align:  left;
+}
+
+.grupoNombre {
+	font-size:   1.1rem;
+	font-weight: 700;
+	color:       #ffffff;
+	margin:      0;
+}
+
+.grupoInfo {
+	font-size: 0.8rem;
+	color:     rgba(255, 255, 255, 0.75);
+	margin:    0.2rem 0 0;
+}
+
+/* Barra de color inferior (igual que categoryColor en dashboard) */
+.grupoColorBar {
+	height:        4px;
+	border-radius: 0 0 22px 22px;
+	margin:        0.5rem 1rem 0;
+}
+
+/* Colores por índice de grupo */
+.grupoColor1 { background-color: var(--grupo-color-1); }
+.grupoColor2 { background-color: var(--grupo-color-2); }
+.grupoColor3 { background-color: var(--grupo-color-3); }
+.grupoColor4 { background-color: var(--grupo-color-4); }
+.grupoColor5 { background-color: var(--grupo-color-5); }
+
+/* ── Lista de miembros dentro del grupo ─────────────────────────────────── */
+.miembroItem {
+	--background:    transparent;
+	--color:         #ffffff;
+	--border-color:  rgba(255, 255, 255, 0.1);
+	font-size:       0.9rem;
+}
+
+.miembroCapitan {
+	color:       var(--lighter-blue-color);
+	font-weight: 600;
+}
+
+.miembroAuxiliar {
+	color:       #3dc2ff;
+	font-weight: 500;
+}
+
+/* ── Contador de miembros ───────────────────────────────────────────────── */
+.cantidadBadge {
+	font-size:     0.75rem;
+	padding:       3px 8px;
+	border-radius: 12px;
+	background:    rgba(151, 180, 255, 0.2);
+	color:         var(--lighter-blue-color);
+	font-weight:   600;
+}

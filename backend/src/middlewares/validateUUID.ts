@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { isValidUUID } from '../utils/uuid'
 import { AppError } from './errorHandler'
 
-export const validateUUID = (req: Request, res: Response, next: NextFunction): void => {
+export const validateUUID = (req: Request, _res: Response, next: NextFunction): void => {
 	const id = req.params.id
 
 	if (!id) {

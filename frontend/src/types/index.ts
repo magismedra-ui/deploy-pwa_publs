@@ -20,8 +20,9 @@ export interface Asistencia extends BaseEntity {
 }
 
 export interface Grupo extends BaseEntity {
-	id?: number
+	id?: string   // BaseEntity usa string; el hook useGrupos usa number internamente
 	nombre: string
+	nroGrupo?: number | null
 }
 
 export interface Publicador extends BaseEntity {

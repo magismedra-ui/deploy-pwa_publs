@@ -11,7 +11,6 @@ import {
 	IonItem,
 	IonLabel,
 	IonIcon,
-	IonButton
 } from '@ionic/react'
 import { useHistory } from 'react-router-dom'
 import { peopleOutline, personOutline, documentTextOutline } from 'ionicons/icons'

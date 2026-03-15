@@ -23,7 +23,14 @@ export const createApp = (): Express => {
 	const app = express()
 
 	app.use(helmet())
-	app.use(cors())
+	app.use(cors({
+		origin: [
+			'http://localhost:5173',
+			'http://localhost:3001',
+			process.env.FRONTEND_URL ?? '',
+		].filter(Boolean),
+		credentials: true,
+	}))
 	app.use(express.json())
 	app.use(express.urlencoded({ extended: true }))
 	app.use(limiter)

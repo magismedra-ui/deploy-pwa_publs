@@ -10,6 +10,9 @@ import Publicadores from '../pages/Publicadores'
 import Asistencias from '../pages/Asistencias'
 import Registros from '../pages/Registros'
 import AddInfoPubl from '../pages/AddInfoPubl'
+import AddInfoPublNew from '../pages/AddInfoPublNew'
+import AddInfoPublEdit from '../pages/AddInfoPublEdit'
+import Dashboard from '../pages/Dashboard'
 
 const Tabs: React.FC = () => {
 	return (
@@ -39,8 +42,17 @@ const Tabs: React.FC = () => {
 				<Route exact path="/tabs/registros">
 					<Registros />
 				</Route>
-				<Route exact path="/tabs/addinfopubl">
+			<Route exact path="/tabs/addinfopubl">
 					<AddInfoPubl />
+				</Route>
+				<Route exact path="/tabs/addinfopubl/new">
+					<AddInfoPublNew />
+				</Route>
+				<Route exact path="/tabs/addinfopubl/:id">
+					<AddInfoPublEdit />
+				</Route>
+				<Route exact path="/tabs/dashboard">
+					<Dashboard />
 				</Route>
 				<Route exact path="/tabs">
 					<Redirect to="/tabs/home" />

@@ -1,0 +1,119 @@
+/*
+ * dashboard.module.css
+ * Estilos del Home/Dashboard — convertidos desde Home.module.scss
+ * Fuente original: frontend/src/pages/Home.module.scss
+ */
+
+/* ── Headings y textos ──────────────────────────────────────────────────── */
+.heading {
+	color:     var(--lighter-blue-color);
+	font-size: 1rem;
+}
+
+.highlightColor {
+	color: #3dc2ff;
+}
+
+.mainTitle {
+	font-size:   2rem;
+	font-weight: 700;
+}
+
+/* ── Tarjetas de grupo (slider horizontal) ──────────────────────────────── */
+.slideHeader {
+	margin:         0 !important;
+	padding:        1.5rem !important;
+	padding-top:    0 !important;
+}
+
+.slideCount {
+	margin:      0 !important;
+	padding:     0 !important;
+	padding-left: 1.5rem !important;
+	padding-top:  1rem !important;
+}
+
+.slideCountText {
+	padding: 0;
+	margin:  0;
+}
+
+.noPadding {
+	padding: 0 !important;
+	margin:  0 !important;
+}
+
+/* ── Slider horizontal de grupos ────────────────────────────────────────── */
+.categorySlider {
+	margin-top:                  -1.6rem;
+	display:                     flex;
+	overflow-x:                  auto;
+	scroll-snap-type:            x mandatory;
+	-webkit-overflow-scrolling:  touch;
+	gap:                         0;
+	padding-bottom:              0.5rem;
+}
+
+.slideItem {
+	width:            60%;
+	min-width:        60%;
+	margin-right:     30px;
+	scroll-snap-align: start;
+	flex-shrink:      0;
+}
+
+.slideItemCol {
+	padding-left: 0;
+}
+
+.slideCard {
+	width:         100%;
+	border-radius: 22px;
+	box-shadow:
+		0 0.7px 0.9px rgba(0, 0, 0, 0.101),
+		0 1.9px 2.5px rgba(0, 0, 0, 0.145),
+		0 4.5px 6px   rgba(0, 0, 0, 0.189),
+		0 15px 20px   rgba(0, 0, 0, 0.29);
+}
+
+.categoryColor {
+	border-bottom: 3px solid var(--pink-color);
+	margin-left:   1rem;
+	margin-right:  1rem;
+	margin-bottom: 0.5rem;
+	margin-top:    -1rem;
+}
+
+/* ── Información reciente ───────────────────────────────────────────────── */
+.recentNotes {
+	padding-left:  0.5rem;
+	padding-right: 0.5rem;
+	max-height:    25rem;
+	overflow:      scroll;
+}
+
+.noteCheckbox {
+	pointer-events: none;
+	--size:         14px;
+}
+
+.noteContent {
+	display:         flex;
+	flex-direction:  column;
+	align-items:     flex-start;
+	justify-content: center;
+	flex:            1 1 auto;
+	min-width:       85%;
+	padding-left:    0.5rem;
+	padding-right:   0.5rem;
+}
+
+/* ── Toolbar negro (Home header) ────────────────────────────────────────── */
+.toolbarBackground {
+	--background: #000000;
+}
+
+/* ── Contenedor inferior ────────────────────────────────────────────────── */
+.bottomContainer {
+	margin-top: -1rem;
+}
