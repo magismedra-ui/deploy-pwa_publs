@@ -11,7 +11,7 @@ services:
       - key: JWT_SECRET
         sync: false          # configurar manualmente en Render dashboard
       - key: FRONTEND_URL
-        sync: false          # URL del frontend en Render, ej: https://tjpubls-web.onrender.com
+        sync: false          # URL del frontend, ej: https://frontend-publs.onrender.com
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -32,5 +32,5 @@ services:
         value: production
     dockerBuildArgs:
       - key: VITE_API_URL
-        sync: false          # URL del backend en Render, ej: https://tjpubls-api.onrender.com/api/v1
+        sync: false          # URL del backend + /api/v1, ej: https://backend-publs.onrender.com/api/v1
     plan: free
