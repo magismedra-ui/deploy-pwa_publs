@@ -11,7 +11,11 @@ const startServer = async () => {
 		await pool.query('SELECT 1')
 		console.log('✅ PostgreSQL (Neon) conectado')
 
-		const redis = await getRedisClient()
+		// Redis es opcional — timeout de 4s para no bloquear el arranque
+		const redis = await Promise.race([
+			getRedisClient(),
+			new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+		])
 		if (redis) console.log('✅ Redis conectado')
 		else console.log('⚠️ Redis no disponible, ejecutando sin caché')
 
