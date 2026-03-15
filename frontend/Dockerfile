@@ -1,13 +1,12 @@
 # ── Stage 1: build ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
-# npm install usa package-lock.json si existe; npm ci exige lockfile y falla en algunos entornos
-RUN npm install
+# Copiar todo el contexto (dockerContext: ./frontend en Render) y luego instalar
 COPY . .
 # VITE_API_URL se pasa como build arg desde Render
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+RUN npm install
 RUN npm run build
 
 # ── Stage 2: serve con nginx ─────────────────────────────────────────────────

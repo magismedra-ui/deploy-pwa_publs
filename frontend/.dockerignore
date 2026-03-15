@@ -1,0 +1,13 @@
+node_modules
+dist
+dist-ssr
+.git
+*.local
+.DS_Store
+.vscode
+.idea
+ios
+android
+.capacitor
+*.log
+*.md
