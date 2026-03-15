@@ -2,7 +2,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# npm install usa package-lock.json si existe; npm ci exige lockfile y falla en algunos entornos
+RUN npm install
 COPY . .
 # VITE_API_URL se pasa como build arg desde Render
 ARG VITE_API_URL
