@@ -1,6 +1,5 @@
 import pool from '../config/database'
 import { Registro } from '../types'
-import { generateUUID } from '../utils/uuid'
 
 export class RegistroRepository {
 	async findAll(): Promise<Registro[]> {
@@ -34,14 +33,12 @@ export class RegistroRepository {
 	}
 
 	async create(data: Registro): Promise<Registro> {
-		const id = generateUUID()
 		const result = await pool.query(
-			`INSERT INTO registro (id, idpublicador, anno_servicio, mes, predico, horas, cursos, precursor, notas)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+			`INSERT INTO registro (idpublicador, anno_servicio, mes, predico, horas, cursos, precursor, notas)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
 			 RETURNING id`,
 			[
-				id,
-				data.idpublicador,
+				Number(data.idpublicador),
 				data.anno_servicio ?? null,
 				data.mes ?? null,
 				data.predico ?? false,

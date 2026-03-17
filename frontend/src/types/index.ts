@@ -53,7 +53,7 @@ export interface Registro extends BaseEntity {
 	precursor?: string
 	horas?: number
 	notas?: string
-	idpublicador: string
+	idpublicador: string | number
 }
 
 export interface Role extends BaseEntity {

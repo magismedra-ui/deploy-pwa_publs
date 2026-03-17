@@ -13,6 +13,7 @@ import AddInfoPubl from '../pages/AddInfoPubl'
 import AddInfoPublNew from '../pages/AddInfoPublNew'
 import AddInfoPublEdit from '../pages/AddInfoPublEdit'
 import Dashboard from '../pages/Dashboard'
+import IngresarInformes from '../pages/IngresarInformes'
 
 const Tabs: React.FC = () => {
 	return (
@@ -42,7 +43,10 @@ const Tabs: React.FC = () => {
 				<Route exact path="/tabs/registros">
 					<Registros />
 				</Route>
-			<Route exact path="/tabs/addinfopubl">
+				<Route exact path="/tabs/ingresar-informes/:grupoId/:grupoNombre">
+					<IngresarInformes />
+				</Route>
+				<Route exact path="/tabs/addinfopubl">
 					<AddInfoPubl />
 				</Route>
 				<Route exact path="/tabs/addinfopubl/new">

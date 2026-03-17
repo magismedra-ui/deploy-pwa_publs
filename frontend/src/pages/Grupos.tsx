@@ -14,14 +14,16 @@ import {
 	IonModal,
 	IonInput,
 	IonLoading,
-	IonAlert
+	IonAlert,
 } from '@ionic/react'
 import { useState, useEffect } from 'react'
-import { add, create, trash } from 'ionicons/icons'
+import { useHistory } from 'react-router-dom'
+import { add, create, trash, documentTextOutline } from 'ionicons/icons'
 import { grupoRepository } from '../repositories/grupo.repository'
 import { Grupo } from '../types'
 
 const Grupos: React.FC = () => {
+	const history = useHistory()
 	const [grupos, setGrupos] = useState<Grupo[]>([])
 	const [loading, setLoading] = useState(true)
 	const [showModal, setShowModal] = useState(false)
@@ -86,6 +88,16 @@ const Grupos: React.FC = () => {
 		}
 	}
 
+	const handleIngresarInformes = (grupo: Grupo) => {
+		const gid = grupo.nroGrupo ?? grupo.id
+		const nombre =
+			grupo.nroGrupo != null
+				? `Grupo ${grupo.nroGrupo} – ${grupo.nombre}`
+				: grupo.nombre
+		const encodedNombre = encodeURIComponent(nombre)
+		history.push(`/tabs/ingresar-informes/${gid}/${encodedNombre}`)
+	}
+
 	const handleNew = () => {
 		setEditingGrupo(null)
 		setNombre('')
@@ -116,6 +128,13 @@ const Grupos: React.FC = () => {
 										</h2>
 										<p>{grupo.syncStatus}</p>
 									</IonLabel>
+									<IonButton
+										fill="clear"
+										onClick={() => handleIngresarInformes(grupo)}
+										title="Ingresar informes"
+									>
+										<IonIcon icon={documentTextOutline} />
+									</IonButton>
 									<IonButton
 										fill="clear"
 										onClick={() => handleEdit(grupo)}

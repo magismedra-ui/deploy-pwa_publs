@@ -5,6 +5,7 @@ import {
 	IonHeader, IonIcon, IonItem, IonPage, IonRow, IonSpinner, IonToolbar
 } from '@ionic/react'
 import { useEffect, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import { addOutline } from 'ionicons/icons'
 import { useAuth } from '../hooks/useAuth'
 import { getPublicadores } from '../services/publicador.service'
@@ -259,6 +260,7 @@ function buildInformacionReciente(
 }
 
 const Home: React.FC = () => {
+	const history = useHistory()
 	const { logout, user, isAuthenticated } = useAuth()
 	const [grupos, setGrupos] = useState<GrupoCard[]>([])
 	const [informacionReciente, setInformacionReciente] = useState<InfoRecienteItem[]>([])
@@ -380,7 +382,14 @@ const Home: React.FC = () => {
 					{ grupos.map((category, index) => (
 						<div key={ `categorySlide_${index}` } className={ styles.slideItem }>
 							<IonCol className="ion-text-left">
-								<IonCard>
+								<IonCard
+									style={{ cursor: 'pointer' }}
+									onClick={() =>
+										history.push(
+											`/tabs/ingresar-informes/${category.id}/${encodeURIComponent(category.name)}`
+										)
+									}
+								>
 									<IonCardHeader className="ion-no-padding">
 										<div className={ styles.slideCount }>
 											<p className={ styles.slideCountText }><span className={ styles.highlightColor }>Capitán:</span> { category.capitan }</p>

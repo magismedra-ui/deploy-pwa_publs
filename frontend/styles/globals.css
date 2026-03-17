@@ -211,6 +211,23 @@ ion-alert {
 	margin-top:  0.5rem;
 }
 
+/* ── Select Privilegio: opciones y título con texto blanco ───────────────── */
+.privilegio-select-options,
+.privilegio-select-options .alert-wrapper,
+ion-alert.privilegio-select-options {
+	--ion-text-color: #ffffff !important;
+	color: #ffffff !important;
+}
+.privilegio-select-options .alert-radio-label,
+.privilegio-select-options .alert-checkbox-label,
+.privilegio-select-options .action-sheet-button,
+.privilegio-select-options .alert-title {
+	color: #ffffff !important;
+}
+.privilegio-select-options .alert-radio .alert-radio-label {
+	color: #ffffff !important;
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (min-width: 768px) {
 	.login-container {

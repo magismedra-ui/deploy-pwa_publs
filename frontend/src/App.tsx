@@ -9,6 +9,7 @@ import { StatusBar, Style } from '@capacitor/status-bar'
 
 import Login from './pages/Login'
 import Tabs from './components/Tabs'
+import IngresarInformes from './pages/IngresarInformes'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { PublicRoute } from './components/PublicRoute'
 import { AuthProvider } from './contexts/AuthContext'
@@ -54,6 +55,12 @@ const App: FC = () => {
 						<PublicRoute exact path="/login">
 							<Login />
 						</PublicRoute>
+						<ProtectedRoute
+							exact
+							path="/tabs/ingresar-informes/:grupoId/:grupoNombre"
+						>
+							<IngresarInformes />
+						</ProtectedRoute>
 						<ProtectedRoute path="/tabs">
 							<Tabs />
 						</ProtectedRoute>
