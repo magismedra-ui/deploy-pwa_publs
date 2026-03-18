@@ -5,7 +5,7 @@ import {
 } from '@ionic/react'
 import { useState, useEffect, Fragment } from 'react'
 import { useParams, useHistory } from 'react-router-dom'
-import { documentTextOutline, homeOutline, arrowBackOutline } from 'ionicons/icons'
+import { documentTextOutline, homeOutline, arrowBackOutline, checkmarkCircle } from 'ionicons/icons'
 import { Capacitor } from '@capacitor/core'
 import { apiService } from '../services/api'
 import { databaseService } from '../services/database.service'
@@ -40,6 +40,17 @@ async function saveRegistro(payload: Omit<Registro, 'id'>): Promise<void> {
 	}
 }
 
+async function getRegistrosMes(mes: string, anno: number): Promise<Registro[]> {
+	const all = await apiService.get<Registro[]>('/registro')
+	return (Array.isArray(all) ? all : []).filter(
+		(r) => r.mes === mes && Number(r.anno_servicio) === anno
+	)
+}
+
+async function updateRegistro(id: string, payload: Omit<Registro, 'id'>): Promise<void> {
+	await apiService.put(`/registro/${id}`, payload)
+}
+
 interface FormState {
 	predico: boolean
 	cursos: string
@@ -67,6 +78,8 @@ const IngresarInformes: React.FC = () => {
 	const { mes, anno } = getMesAnterior()
 
 	const [publicadores, setPublicadores] = useState<Publicador[]>([])
+	const [registrosMes, setRegistrosMes] = useState<Registro[]>([])
+	const [editingRegistroId, setEditingRegistroId] = useState<string | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [showModal, setShowModal] = useState(false)
@@ -83,8 +96,12 @@ const IngresarInformes: React.FC = () => {
 		setLoading(true)
 		setError(null)
 		try {
-			const data = await getPublicadoresByGrupo(gid)
+			const [data, registros] = await Promise.all([
+				getPublicadoresByGrupo(gid),
+				getRegistrosMes(mes, anno)
+			])
 			setPublicadores(data.sort((a, b) => a.nombre.localeCompare(b.nombre)))
+			setRegistrosMes(registros)
 		} catch (e: any) {
 			setError(e.message || 'Error al cargar publicadores')
 		} finally {
@@ -92,9 +109,20 @@ const IngresarInformes: React.FC = () => {
 		}
 	}
 
+	const getRegistroForPub = (pub: Publicador): Registro | undefined =>
+		registrosMes.find((r) => String(Number(r.idpublicador)) === String(Number(pub.id)))
+
 	const openModal = (pub: Publicador) => {
+		const existing = getRegistroForPub(pub)
 		setSelectedPub(pub)
-		setForm({ ...FORM_DEFAULT, precursor: pub.precursor ?? 'Publicador' })
+		setEditingRegistroId(existing?.id ?? null)
+		setForm({
+			predico: existing?.predico ?? true,
+			cursos: String(existing?.cursos ?? 0),
+			horas: String(existing?.horas ?? 0),
+			precursor: existing?.precursor ?? pub.precursor ?? 'Publicador',
+			notas: existing?.notas ?? ''
+		})
 		setShowModal(true)
 	}
 
@@ -107,17 +135,7 @@ const IngresarInformes: React.FC = () => {
 		if (!selectedPub) return
 		setSaving(true)
 		try {
-			console.log('Guardando informe', {
-				anno,
-				mes,
-				predico: form.predico,
-				cursos: form.cursos,
-				horas: form.horas,
-				precursor: form.precursor,
-				notas: form.notas,
-				idpublicador: String(Number(selectedPub.id)),
-			})
-			await saveRegistro({
+			const payload = {
 				anno_servicio: anno,
 				mes,
 				predico: form.predico,
@@ -126,11 +144,16 @@ const IngresarInformes: React.FC = () => {
 				precursor: form.precursor,
 				notas: form.notas,
 				idpublicador: String(Number(selectedPub.id)),
-			})
+			}
+			if (editingRegistroId) {
+				await updateRegistro(editingRegistroId, payload)
+			} else {
+				await saveRegistro(payload)
+			}
+			await loadPublicadores()
 			closeModal()
-			setSuccessMsg(`Informe de ${selectedPub.nombre} guardado`)
+			setSuccessMsg(`Informe de ${selectedPub.nombre} ${editingRegistroId ? 'actualizado' : 'guardado'}`)
 		} catch (e: any) {
-			console.error('Error al guardar informe', e)
 			const apiMsg = e?.response?.data?.message || e?.response?.data?.error
 			setError(apiMsg || e.message || 'Error al guardar informe')
 		} finally {
@@ -199,15 +222,21 @@ const IngresarInformes: React.FC = () => {
 											{pub.precursor ?? pub.privilegio ?? 'Publicador'}
 										</p>
 									</IonLabel>
-									<IonButton
-										slot="end"
-										fill="outline"
-										size="small"
-										onClick={() => openModal(pub)}
-									>
-										<IonIcon icon={documentTextOutline} slot="start" />
-										Informe
-									</IonButton>
+									{(() => {
+										const existing = getRegistroForPub(pub)
+										return (
+											<IonButton
+												slot="end"
+												fill={existing ? 'solid' : 'outline'}
+												color={existing ? 'success' : 'primary'}
+												size="small"
+												onClick={() => openModal(pub)}
+											>
+												<IonIcon icon={existing ? checkmarkCircle : documentTextOutline} slot="start" />
+												{existing ? 'Ver' : 'Informe'}
+											</IonButton>
+										)
+									})()}
 								</IonItem>
 								{index < publicadores.length - 1 && (
 									<div
@@ -252,7 +281,7 @@ const IngresarInformes: React.FC = () => {
 								</IonButton>
 							</IonButtons>
 							<IonTitle style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.95rem' }}>
-								INFORME DE PREDICACIÓN
+								{editingRegistroId ? 'EDITAR INFORME' : 'INFORME DE PREDICACIÓN'}
 							</IonTitle>
 						</IonToolbar>
 					</IonHeader>
@@ -411,7 +440,7 @@ const IngresarInformes: React.FC = () => {
 										onClick={handleSave}
 										disabled={saving}
 									>
-										{saving ? <IonSpinner name="crescent" /> : 'Guardar Informe'}
+										{saving ? <IonSpinner name="crescent" /> : (editingRegistroId ? 'Actualizar Informe' : 'Guardar Informe')}
 									</IonButton>
 								</div>
 							</div>

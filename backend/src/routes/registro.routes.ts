@@ -7,10 +7,10 @@ const router = Router()
 const controller = new RegistroController()
 
 router.get('/', authenticate, controller.findAll)
-router.get('/:id', authenticate, validateUUID, controller.findById)
-router.get('/publicador/:idpublicador', authenticate, validateUUID, controller.findByPublicador)
+router.get('/publicador/:idpublicador', authenticate, controller.findByPublicador)
+router.get('/:id', authenticate, controller.findById)
 router.post('/', authenticate, controller.create)
-router.put('/:id', authenticate, validateUUID, controller.update)
-router.delete('/:id', authenticate, validateUUID, controller.delete)
+router.put('/:id', authenticate, controller.update)
+router.delete('/:id', authenticate, controller.delete)
 
 export default router
