@@ -1,6 +1,5 @@
 import pool from '../config/database'
 import { Asistencia } from '../types'
-import { generateUUID } from '../utils/uuid'
 
 export class AsistenciaRepository {
 	async findAll(): Promise<Asistencia[]> {
@@ -23,13 +22,11 @@ export class AsistenciaRepository {
 	}
 
 	async create(data: Asistencia): Promise<Asistencia> {
-		const id = generateUUID()
 		const result = await pool.query(
-			`INSERT INTO asistencia (id, fecha, presencial, zoom)
-			 VALUES ($1, $2, $3, $4)
+			`INSERT INTO asistencia (fecha, presencial, zoom)
+			 VALUES ($1, $2, $3)
 			 RETURNING id`,
 			[
-				id,
 				data.fecha,
 				data.presencial ?? null,
 				data.zoom ?? null,
