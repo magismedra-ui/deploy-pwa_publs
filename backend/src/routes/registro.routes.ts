@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { RegistroController } from '../controllers/registro.controller'
 import { authenticate } from '../middlewares/auth'
-import { validateUUID } from '../middlewares/validateUUID'
 
 const router = Router()
 const controller = new RegistroController()
