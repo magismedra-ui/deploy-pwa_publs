@@ -161,3 +161,24 @@
 		margin: 0 auto;
 	}
 }
+
+/* Tab bar */
+ion-tab-bar {
+	--background: #041955;
+	--border: none;
+}
+
+ion-tab-button {
+	--color: #97B4FF !important;
+	--color-selected: #2dd36f;
+	--background: transparent;
+	--background-focused: transparent;
+}
+
+ion-tab-button.tab-active {
+	--color: #2dd36f !important;
+}
+
+ion-tab-button.tab-selected:not(.tab-active) {
+	--color: #97B4FF !important;
+}

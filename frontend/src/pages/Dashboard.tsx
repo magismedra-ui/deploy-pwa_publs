@@ -147,7 +147,11 @@ const Dashboard: React.FC = () => {
 				<IonFab slot="fixed" vertical="bottom" horizontal="end">
 					<IonFabButton
 						color="primary"
-						onClick={() => history.push(fabRoutes[activeTab])}
+						onClick={() =>
+							activeTab === 'asistencias'
+								? history.push('/tabs/home?openAsistencia=1')
+								: history.push(fabRoutes[activeTab])
+						}
 					>
 						<IonIcon icon={add} />
 					</IonFabButton>

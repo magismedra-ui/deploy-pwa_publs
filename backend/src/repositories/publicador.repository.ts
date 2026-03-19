@@ -1,6 +1,5 @@
 import pool from '../config/database'
 import { Publicador } from '../types'
-import { generateUUID } from '../utils/uuid'
 
 export class PublicadorRepository {
 	async findAll(): Promise<Publicador[]> {
@@ -40,16 +39,14 @@ export class PublicadorRepository {
 	}
 
 	async create(data: Publicador): Promise<Publicador> {
-		const id = generateUUID()
 		const result = await pool.query(
 			`INSERT INTO publicador (
-				id, nombre, correo, sexo, esperanza, privilegio, precursor,
+				nombre, correo, sexo, esperanza, privilegio, precursor,
 				fecha_nacimiento, fecha_bautismo, direccion, telefono_familiar,
 				telefono, grupo, capitan, auxiliar, estado, observaciones
-			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
 			RETURNING id`,
 			[
-				id,
 				data.nombre,
 				data.correo ?? null,
 				data.sexo ?? null,

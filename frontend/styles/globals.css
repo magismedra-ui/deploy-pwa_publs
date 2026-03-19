@@ -228,6 +228,13 @@ ion-alert.privilegio-select-options {
 	color: #ffffff !important;
 }
 
+/* ── Icono del selector de fecha en modal de asistencia (verde) ──────────── */
+.asistencia-date-input::-webkit-calendar-picker-indicator {
+	color: #2dd36f;
+	filter: none;
+	opacity: 1;
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (min-width: 768px) {
 	.login-container {

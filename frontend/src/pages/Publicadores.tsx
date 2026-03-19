@@ -92,8 +92,8 @@ const Publicadores: React.FC = () => {
 	return (
 		<IonPage>
 			<IonHeader>
-				<IonToolbar>
-					<IonTitle>Publicadores</IonTitle>
+				<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
+					<IonTitle style={{ color: '#ffffff' }}>Publicadores</IonTitle>
 				</IonToolbar>
 			</IonHeader>
 			<IonContent fullscreen>

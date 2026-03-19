@@ -2,11 +2,12 @@ import {
 	IonButton, IonButtons, IonCard,
 	IonCardContent, IonCardHeader, IonCardSubtitle,
 	IonCheckbox, IonCol, IonContent, IonFab, IonFabButton, IonGrid,
-	IonHeader, IonIcon, IonItem, IonModal, IonInput, IonPage, IonRow, IonSpinner, IonToolbar
+	IonHeader, IonIcon, IonItem, IonModal, IonPage, IonRow,
+	IonSpinner, IonTitle, IonToolbar
 } from '@ionic/react'
 import { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
-import { addOutline } from 'ionicons/icons'
+import { useHistory, useLocation } from 'react-router-dom'
+import { addOutline, arrowBackOutline } from 'ionicons/icons'
 import { useAuth } from '../hooks/useAuth'
 import { getPublicadores } from '../services/publicador.service'
 import { getAsistencias } from '../services/asistencia.service'
@@ -221,7 +222,7 @@ function buildInfoInformes(
 	})
 	const reportadosPorGrupo = new Map<number, number>()
 	for (const r of registrosMes) {
-		const grupo = idToGrupo.get(r.idpublicador)
+		const grupo = idToGrupo.get(String(r.idpublicador))
 		if (grupo != null) {
 			reportadosPorGrupo.set(grupo, (reportadosPorGrupo.get(grupo) ?? 0) + 1)
 		}
@@ -262,6 +263,7 @@ function buildInformacionReciente(
 
 const Home: React.FC = () => {
 	const history = useHistory()
+	const location = useLocation()
 	const { logout, user, isAuthenticated } = useAuth()
 	const [grupos, setGrupos] = useState<GrupoCard[]>([])
 	const [informacionReciente, setInformacionReciente] = useState<InfoRecienteItem[]>([])
@@ -269,7 +271,7 @@ const Home: React.FC = () => {
 	const [errorGrupos, setErrorGrupos] = useState<string | null>(null)
 	const [errorInfo, setErrorInfo] = useState<string | null>(null)
 	const [showAsistenciaModal, setShowAsistenciaModal] = useState(false)
-	const [asistenciaForm, setAsistenciaForm] = useState({ fecha: new Date().toISOString().split('T')[0], presencial: '', zoom: '' })
+	const [asistenciaForm, setAsistenciaForm] = useState({ fecha: '', presencial: '', zoom: '' })
 	const [savingAsistencia, setSavingAsistencia] = useState(false)
 	const [asistenciaError, setAsistenciaError] = useState<string | null>(null)
 	const [editingAsistenciaId, setEditingAsistenciaId] = useState<string | null>(null)
@@ -277,11 +279,6 @@ const Home: React.FC = () => {
 	// Cargar datos al montar y cuando el usuario esté autenticado (p. ej. tras login)
 	useEffect(() => {
 		if (!isAuthenticated) return
-
-		let cancelled = false
-		const timeoutId = setTimeout(() => {
-			if (!cancelled) setLoading(false)
-		}, 8000)
 
 		async function load() {
 			setLoading(true)
@@ -293,31 +290,19 @@ const Home: React.FC = () => {
 					getAsistencias(),
 					getRegistros()
 				])
-				if (!cancelled) {
-					setGrupos(buildGruposFromPublicadores(publicadores))
-					setInformacionReciente(
-						buildInformacionReciente(publicadores, asistencias, registros)
-					)
-					setLoading(false)
-				}
+				setGrupos(buildGruposFromPublicadores(publicadores))
+				setInformacionReciente(
+					buildInformacionReciente(publicadores, asistencias, registros)
+				)
+				setLoading(false)
 			} catch (err: unknown) {
-				if (!cancelled) {
-					const msg = err instanceof Error ? err.message : 'Error al cargar datos'
-					setErrorGrupos(msg)
-					setErrorInfo(msg)
-					setLoading(false)
-				}
-			} finally {
-				if (!cancelled) {
-					setLoading(false)
-				}
+				const msg = err instanceof Error ? err.message : 'Error al cargar datos'
+				setErrorGrupos(msg)
+				setErrorInfo(msg)
+				setLoading(false)
 			}
 		}
 		load()
-		return () => {
-			cancelled = true
-			clearTimeout(timeoutId)
-		}
 	}, [isAuthenticated])
 
 	const handleLogout = () => {
@@ -325,18 +310,12 @@ const Home: React.FC = () => {
 	}
 
 	const openAsistenciaModal = () => {
-		const ultima = [...informacionReciente].find(i => i.id === 2) as any
-		if (ultima && ultima.fecha_registro) {
-			setEditingAsistenciaId(null)
-			setAsistenciaForm({
-				fecha: ultima.fecha_registro,
-				presencial: String(ultima.presencia ?? ''),
-				zoom: String(ultima.zoom ?? '')
-			})
-		} else {
-			setAsistenciaForm({ fecha: new Date().toISOString().split('T')[0], presencial: '', zoom: '' })
-			setEditingAsistenciaId(null)
+		const active = document.activeElement as HTMLElement | null
+		if (active && typeof active.blur === 'function') {
+			active.blur()
 		}
+		setEditingAsistenciaId(null)
+		setAsistenciaForm({ fecha: '', presencial: '', zoom: '' })
 		setShowAsistenciaModal(true)
 	}
 
@@ -369,6 +348,14 @@ const Home: React.FC = () => {
 			setSavingAsistencia(false)
 		}
 	}
+
+	useEffect(() => {
+		const params = new URLSearchParams(location.search)
+		if (params.get('openAsistencia') === '1') {
+			openAsistenciaModal()
+			history.replace('/tabs/home')
+		}
+	}, [location.search])
 
 	return (
 		<IonPage>
@@ -479,7 +466,7 @@ const Home: React.FC = () => {
 								</p>
 							</div>
 						) }
-						{ informacionReciente.map((note) => (
+						{ informacionReciente.filter((note) => note.id !== 3).map((note) => (
 							<IonRow key={ `note_${note.id}` } id={ `noteRow_${note.id}` }>
 								<IonCol size="12">
 									<IonItem>
@@ -517,16 +504,6 @@ const Home: React.FC = () => {
 													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Zoom:</span> { note.zoom }</p>
 												</>
 											) }
-											{ note.id === 3 && (
-												<>
-													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', paddingBottom: '0.5rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Mes de servicio:</span>{" "} { note.mes } /{ note.anno }</p>
-													{ note.gruposEstado.map((g) => (
-														<p key={ g.grupoId } className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', paddingBottom: '0.3rem', fontSize: '0.70rem' }}>
-															<span style={{ color: note.color }}>Grupo { g.grupoId }:</span> { g.faltan === 0 ? 'Informes completos' : `${g.faltan} Faltan por informar` }
-														</p>
-													)) }
-												</>
-											) }
 										</div>
 									</IonItem>
 								</IonCol>
@@ -541,79 +518,81 @@ const Home: React.FC = () => {
 					</IonFabButton>
 				</IonFab>
 
-				<IonModal isOpen={showAsistenciaModal} onDidDismiss={() => setShowAsistenciaModal(false)}>
-					<IonHeader>
-						<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
-							<IonButtons slot="start">
-								<IonButton onClick={() => setShowAsistenciaModal(false)} style={{ color: '#ffffff' }}>
-									<IonIcon icon={addOutline} slot="icon-only" style={{ transform: 'rotate(45deg)' }} />
-								</IonButton>
-							</IonButtons>
-							<IonTitle style={{ color: '#ffffff', fontWeight: 700, fontSize: '1rem' }}>
-								REGISTRAR ASISTENCIA
-							</IonTitle>
-						</IonToolbar>
-					</IonHeader>
-					<IonContent className="ion-padding" style={{ '--background': '#1D68DF' } as any}>
-						<div style={{ background: '#041955', borderRadius: 12, padding: '16px' }}>
-
-							<div style={{ marginBottom: 12 }}>
-								<label style={{ fontSize: '0.72rem', color: 'var(--ion-color-medium)', display: 'block', marginBottom: 4 }}>Fecha</label>
-								<input
-									type="date"
-									value={asistenciaForm.fecha}
-									onChange={(e) => setAsistenciaForm(f => ({ ...f, fecha: e.target.value }))}
-									style={{
-										width: '100%', padding: '8px 10px', borderRadius: 8,
-										border: '1px solid #333', background: '#12122a',
-										color: '#ffffff', fontSize: '0.9rem', boxSizing: 'border-box'
-									}}
-								/>
-							</div>
-
-							<div style={{ marginBottom: 12 }}>
-								<label style={{ fontSize: '0.72rem', color: 'var(--ion-color-medium)', display: 'block', marginBottom: 4 }}>Presencial</label>
-								<input
-									type="number"
-									min={0}
-									value={asistenciaForm.presencial}
-									onChange={(e) => setAsistenciaForm(f => ({ ...f, presencial: e.target.value }))}
-									placeholder="0"
-									style={{
-										width: '100%', padding: '8px 10px', borderRadius: 8,
-										border: '1px solid #333', background: '#12122a',
-										color: '#ffffff', fontSize: '0.9rem', boxSizing: 'border-box'
-									}}
-								/>
-							</div>
-
-							<div style={{ marginBottom: 20 }}>
-								<label style={{ fontSize: '0.72rem', color: 'var(--ion-color-medium)', display: 'block', marginBottom: 4 }}>Zoom</label>
-								<input
-									type="number"
-									min={0}
-									value={asistenciaForm.zoom}
-									onChange={(e) => setAsistenciaForm(f => ({ ...f, zoom: e.target.value }))}
-									placeholder="0"
-									style={{
-										width: '100%', padding: '8px 10px', borderRadius: 8,
-										border: '1px solid #333', background: '#12122a',
-										color: '#ffffff', fontSize: '0.9rem', boxSizing: 'border-box'
-									}}
-								/>
-							</div>
-
-							{asistenciaError && (
-								<p style={{ color: '#ff4444', fontSize: '0.8rem', marginBottom: 12 }}>{asistenciaError}</p>
-							)}
-
-							<IonButton expand="block" onClick={handleSaveAsistencia} disabled={savingAsistencia}>
-								{savingAsistencia ? <IonSpinner name="crescent" /> : (editingAsistenciaId ? 'Actualizar' : 'Guardar Asistencia')}
-							</IonButton>
-						</div>
-					</IonContent>
-				</IonModal>
 			</IonContent>
+
+			<IonModal
+				key={showAsistenciaModal ? 'open' : 'closed'}
+				isOpen={showAsistenciaModal}
+				onDidDismiss={() => setShowAsistenciaModal(false)}
+			>
+				<IonHeader>
+					<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
+						<IonButtons slot="start">
+							<IonButton onClick={() => setShowAsistenciaModal(false)} style={{ color: '#ffffff' }}>
+								<IonIcon icon={arrowBackOutline} slot="icon-only" />
+							</IonButton>
+						</IonButtons>
+						<IonTitle style={{ color: '#ffffff', fontWeight: 700, fontSize: '1rem' }}>
+							ASISTENCIA
+						</IonTitle>
+					</IonToolbar>
+				</IonHeader>
+				<IonContent className="ion-padding" style={{ '--background': '#1D68DF' } as any}>
+					<div style={{ background: '#041955', borderRadius: 12, padding: '16px' }}>
+						<div style={{ marginBottom: 12 }}>
+							<label style={{ fontSize: '0.72rem', color: 'var(--ion-color-medium)', display: 'block', marginBottom: 4 }}>Fecha</label>
+							<input
+								type="date"
+								value={asistenciaForm.fecha}
+								onChange={(e) => setAsistenciaForm(f => ({ ...f, fecha: e.target.value }))}
+								className="asistencia-date-input"
+								style={{
+									width: '100%', padding: '8px 10px', borderRadius: 8,
+									border: '1px solid #333', background: '#12122a',
+									color: '#ffffff', fontSize: '0.9rem', boxSizing: 'border-box'
+								}}
+							/>
+						</div>
+						<div style={{ marginBottom: 12 }}>
+							<label style={{ fontSize: '0.72rem', color: 'var(--ion-color-medium)', display: 'block', marginBottom: 4 }}>Presencial</label>
+							<input
+								type="number"
+								min={0}
+								value={asistenciaForm.presencial}
+								onChange={(e) => setAsistenciaForm(f => ({ ...f, presencial: e.target.value }))}
+								placeholder="0"
+								style={{
+									width: '100%', padding: '8px 10px', borderRadius: 8,
+									border: '1px solid #333', background: '#12122a',
+									color: '#ffffff', fontSize: '0.9rem', boxSizing: 'border-box'
+								}}
+							/>
+						</div>
+						<div style={{ marginBottom: 20 }}>
+							<label style={{ fontSize: '0.72rem', color: 'var(--ion-color-medium)', display: 'block', marginBottom: 4 }}>Zoom</label>
+							<input
+								type="number"
+								min={0}
+								value={asistenciaForm.zoom}
+								onChange={(e) => setAsistenciaForm(f => ({ ...f, zoom: e.target.value }))}
+								placeholder="0"
+								style={{
+									width: '100%', padding: '8px 10px', borderRadius: 8,
+									border: '1px solid #333', background: '#12122a',
+									color: '#ffffff', fontSize: '0.9rem', boxSizing: 'border-box'
+								}}
+							/>
+						</div>
+						{asistenciaError && (
+							<p style={{ color: '#ff4444', fontSize: '0.8rem', marginBottom: 12 }}>{asistenciaError}</p>
+						)}
+						<IonButton expand="block" onClick={handleSaveAsistencia} disabled={savingAsistencia}>
+							{savingAsistencia ? <IonSpinner name="crescent" /> : (editingAsistenciaId ? 'Actualizar' : 'Guardar Asistencia')}
+						</IonButton>
+					</div>
+				</IonContent>
+			</IonModal>
+
 		</IonPage>
 	);
 };
