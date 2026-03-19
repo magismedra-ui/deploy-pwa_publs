@@ -11,5 +11,6 @@ router.get('/:id', authenticate, controller.findById)
 router.post('/', authenticate, controller.create)
 router.put('/:id', authenticate, controller.update)
 router.delete('/:id', authenticate, controller.delete)
+router.get('/:id/tarjeta-s21', authenticate, controller.downloadTarjetaS21)
 
 export default router

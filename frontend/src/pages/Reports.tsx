@@ -147,7 +147,7 @@ const Reports: React.FC = () => {
 			presencial: String(a.presencial ?? ''),
 			zoom: String(a.zoom ?? ''),
 		})
-		document.activeElement?.blur()
+		;(document.activeElement as HTMLElement | null)?.blur()
 		setShowAsistenciaEditModal(true)
 	}
 

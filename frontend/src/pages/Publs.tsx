@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react'
 import { createOutline, downloadOutline, arrowBackOutline } from 'ionicons/icons'
 import { apiService } from '../services/api'
 import { Publicador } from '../types'
+import axios from 'axios'
+import { storage } from '../utils/storage'
 
 const SEXOS = ['HOMBRE', 'MUJER']
 const ESPERANZAS = ['OTRAS OVEJAS', 'UNGIDO']
@@ -94,6 +96,7 @@ const Publs: React.FC = () => {
 	}
 
 	const openEdit = (pub: Publicador) => {
+		(document.activeElement as HTMLElement | null)?.blur()
 		setEditingPub(pub)
 		setForm({
 			nombre: pub.nombre ?? '',
@@ -138,143 +141,48 @@ const Publs: React.FC = () => {
 		}
 	}
 
-	const handleDownload = (pub: Publicador) => {
-		const lines = [
-			`Nombre: ${pub.nombre}`, `Correo: ${pub.correo ?? '—'}`,
-			`Sexo: ${pub.sexo ?? '—'}`, `Esperanza: ${pub.esperanza ?? '—'}`,
-			`Privilegio: ${pub.privilegio ?? '—'}`, `Precursor: ${pub.precursor ?? '—'}`,
-			`Fecha Nacimiento: ${pub.fecha_nacimiento ?? '—'}`,
-			`Fecha Bautismo: ${pub.fecha_bautismo ?? '—'}`,
-			`Dirección: ${pub.direccion ?? '—'}`,
-			`Tel. Familiar: ${pub.telefono_familiar ?? '—'}`,
-			`Tel. Personal: ${pub.telefono ?? '—'}`,
-			`Grupo: ${pub.grupo ?? '—'}`, `Estado: ${pub.estado ?? '—'}`,
-			`Capitán: ${pub.capitan ? 'Sí' : 'No'}`,
-			`Auxiliar: ${pub.auxiliar ? 'Sí' : 'No'}`,
-			`Observaciones: ${pub.observaciones ?? '—'}`,
-		].join('\n')
-		const blob = new Blob([lines], { type: 'text/plain' })
-		const url = URL.createObjectURL(blob)
-		const a = document.createElement('a')
-		a.href = url; a.download = `${pub.nombre.replace(/ /g, '_')}.txt`
-		a.click(); URL.revokeObjectURL(url)
+	const handleDownload = async (pub: Publicador) => {
+		if (!pub.id) return
+		try {
+			const token = await storage.getToken()
+			const apiBaseUrl =
+				import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
+
+			const endpoint = `${apiBaseUrl}/publicador/${pub.id}/tarjeta-s21`
+			const res = await axios.get(endpoint, {
+				responseType: 'blob',
+				headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+			})
+
+			const blob = new Blob([res.data], { type: 'application/pdf' })
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement('a')
+			a.href = url
+			a.download = `S-21_${(pub.nombre ?? 'publicador').replace(/ /g, '_')}.pdf`
+			a.click()
+			URL.revokeObjectURL(url)
+		} catch (e: any) {
+			setError(e?.response?.data?.error?.message || e?.message || 'Error al descargar PDF')
+		}
 	}
 
-	const F = ({ label, children }: { label: string; children: React.ReactNode }) => (
-		<div style={{ marginBottom: 12 }}>
-			<label style={labelStyle}>{label}</label>
-			{children}
-		</div>
+	const F = React.useCallback(
+		({ label, children }: { label: string; children: React.ReactNode }) => (
+			<div style={{ marginBottom: 12 }}>
+				<label style={labelStyle}>{label}</label>
+				{children}
+			</div>
+		),
+		[],
 	)
 
 	return (
 		<IonPage>
 			<IonHeader>
-				<IonToolbar>
-					<IonTitle>Publicadores</IonTitle>
+				<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
+					<IonTitle style={{ color: '#ffffff' }}>Publicadores</IonTitle>
 				</IonToolbar>
 			</IonHeader>
-
-			<IonModal isOpen={showModal} onDidDismiss={closeModal}>
-				<IonHeader>
-					<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
-						<IonButtons slot="start">
-							<IonButton onClick={closeModal} style={{ color: '#ffffff' }}>
-								<IonIcon icon={arrowBackOutline} slot="icon-only" />
-							</IonButton>
-						</IonButtons>
-						<IonTitle style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.95rem' }}>
-							EDITAR PUBLICADOR
-						</IonTitle>
-					</IonToolbar>
-				</IonHeader>
-				<IonContent className="ion-padding" style={{ '--background': '#1D68DF' } as any}>
-					<div style={{ background: '#041955', borderRadius: 12, padding: 16 }}>
-
-						<F label="Nombre">
-							<input style={inputStyle} value={form.nombre}
-								onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
-						</F>
-						<F label="Correo">
-							<input style={inputStyle} type="email" value={form.correo}
-								onChange={e => setForm(f => ({ ...f, correo: e.target.value }))} />
-						</F>
-						<F label="Sexo">
-							<select style={selectStyle} value={form.sexo}
-								onChange={e => setForm(f => ({ ...f, sexo: e.target.value }))}>
-								{SEXOS.map(s => <option key={s} value={s}>{s}</option>)}
-							</select>
-						</F>
-						<F label="Esperanza">
-							<select style={selectStyle} value={form.esperanza}
-								onChange={e => setForm(f => ({ ...f, esperanza: e.target.value }))}>
-								{ESPERANZAS.map(s => <option key={s} value={s}>{s}</option>)}
-							</select>
-						</F>
-						<F label="Privilegio">
-							<select style={selectStyle} value={form.privilegio}
-								onChange={e => setForm(f => ({ ...f, privilegio: e.target.value }))}>
-								{PRIVILEGIOS.map(s => <option key={s} value={s}>{s}</option>)}
-							</select>
-						</F>
-						<F label="Precursor">
-							<select style={selectStyle} value={form.precursor}
-								onChange={e => setForm(f => ({ ...f, precursor: e.target.value }))}>
-								{PRECURSORES.map(s => <option key={s} value={s}>{s}</option>)}
-							</select>
-						</F>
-						<F label="Fecha Nacimiento">
-							<input style={inputStyle} type="date" value={form.fecha_nacimiento}
-								onChange={e => setForm(f => ({ ...f, fecha_nacimiento: e.target.value }))} />
-						</F>
-						<F label="Fecha Bautismo">
-							<input style={inputStyle} type="date" value={form.fecha_bautismo}
-								onChange={e => setForm(f => ({ ...f, fecha_bautismo: e.target.value }))} />
-						</F>
-						<F label="Dirección">
-							<input style={inputStyle} value={form.direccion}
-								onChange={e => setForm(f => ({ ...f, direccion: e.target.value }))} />
-						</F>
-						<F label="Tel. Familiar">
-							<input style={inputStyle} type="number" value={form.telefono_familiar}
-								onChange={e => setForm(f => ({ ...f, telefono_familiar: e.target.value }))} />
-						</F>
-						<F label="Tel. Personal">
-							<input style={inputStyle} type="number" value={form.telefono}
-								onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} />
-						</F>
-						<F label="Grupo (número)">
-							<input style={inputStyle} type="number" value={form.grupo}
-								onChange={e => setForm(f => ({ ...f, grupo: e.target.value }))} />
-						</F>
-						<F label="Estado">
-							<select style={selectStyle} value={form.estado}
-								onChange={e => setForm(f => ({ ...f, estado: e.target.value }))}>
-								{ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
-							</select>
-						</F>
-						<div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-							<label style={{ color: '#fff', fontSize: '0.88rem' }}>Capitán de grupo</label>
-							<IonToggle checked={form.capitan}
-								onIonChange={e => setForm(f => ({ ...f, capitan: e.detail.checked }))} />
-						</div>
-						<div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-							<label style={{ color: '#fff', fontSize: '0.88rem' }}>Auxiliar de grupo</label>
-							<IonToggle checked={form.auxiliar}
-								onIonChange={e => setForm(f => ({ ...f, auxiliar: e.detail.checked }))} />
-						</div>
-						<F label="Observaciones">
-							<textarea style={{ ...inputStyle, resize: 'none' } as React.CSSProperties}
-								rows={3} value={form.observaciones}
-								onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))} />
-						</F>
-
-						<IonButton expand="block" onClick={handleSave} disabled={saving} style={{ marginTop: 8 }}>
-							{saving ? <IonSpinner name="crescent" /> : 'Actualizar Publicador'}
-						</IonButton>
-					</div>
-				</IonContent>
-			</IonModal>
 
 			<IonContent fullscreen>
 				<IonSearchbar
@@ -296,7 +204,7 @@ const Publs: React.FC = () => {
 										{pub.nombre}
 									</p>
 									<p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#97B4FF' }}>
-										{pub.precursor ?? pub.privilegio ?? 'Publicador'}
+										{pub.privilegio ?? '—'}
 									</p>
 								</div>
 								<div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
@@ -320,10 +228,127 @@ const Publs: React.FC = () => {
 						)}
 					</div>
 				)}
+
+				<IonModal key={showModal ? 'open' : 'closed'} isOpen={showModal} onDidDismiss={closeModal}>
+					<IonHeader>
+						<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
+							<IonButtons slot="start">
+								<IonButton onClick={closeModal} style={{ color: '#ffffff' }}>
+									<IonIcon icon={arrowBackOutline} slot="icon-only" />
+								</IonButton>
+							</IonButtons>
+							<IonTitle style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.95rem' }}>
+								EDITAR PUBLICADOR
+							</IonTitle>
+						</IonToolbar>
+					</IonHeader>
+					<IonContent className="ion-padding" style={{ '--background': '#1D68DF' } as any}>
+						<div style={{ background: '#041955', borderRadius: 12, padding: 16 }}>
+
+							<F label="Nombre">
+								<input style={inputStyle} value={form.nombre}
+									onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
+							</F>
+							<F label="Correo">
+								<input style={inputStyle} type="email" value={form.correo}
+									onChange={e => setForm(f => ({ ...f, correo: e.target.value }))} />
+							</F>
+							<F label="Sexo">
+								<select style={selectStyle} value={form.sexo}
+									onChange={e => setForm(f => ({ ...f, sexo: e.target.value }))}>
+									{SEXOS.map(s => <option key={s} value={s}>{s}</option>)}
+								</select>
+							</F>
+							<F label="Esperanza">
+								<select style={selectStyle} value={form.esperanza}
+									onChange={e => setForm(f => ({ ...f, esperanza: e.target.value }))}>
+									{ESPERANZAS.map(s => <option key={s} value={s}>{s}</option>)}
+								</select>
+							</F>
+							<F label="Privilegio">
+								<select style={selectStyle} value={form.privilegio}
+									onChange={e => setForm(f => ({ ...f, privilegio: e.target.value }))}>
+									{PRIVILEGIOS.map(s => <option key={s} value={s}>{s}</option>)}
+								</select>
+							</F>
+							<F label="Precursor">
+								<select style={selectStyle} value={form.precursor}
+									onChange={e => setForm(f => ({ ...f, precursor: e.target.value }))}>
+									{PRECURSORES.map(s => <option key={s} value={s}>{s}</option>)}
+								</select>
+							</F>
+							<F label="Fecha Nacimiento">
+								<input style={inputStyle} type="date" value={form.fecha_nacimiento}
+									onChange={e => setForm(f => ({ ...f, fecha_nacimiento: e.target.value }))} />
+							</F>
+							<F label="Fecha Bautismo">
+								<input style={inputStyle} type="date" value={form.fecha_bautismo}
+									onChange={e => setForm(f => ({ ...f, fecha_bautismo: e.target.value }))} />
+							</F>
+							<F label="Dirección">
+								<input style={inputStyle} value={form.direccion}
+									onChange={e => setForm(f => ({ ...f, direccion: e.target.value }))} />
+							</F>
+							<F label="Tel. Familiar">
+								<input style={inputStyle} type="number" value={form.telefono_familiar}
+									onChange={e => setForm(f => ({ ...f, telefono_familiar: e.target.value }))} />
+							</F>
+							<F label="Tel. Personal">
+								<input style={inputStyle} type="number" value={form.telefono}
+									onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} />
+							</F>
+							<F label="Grupo (número)">
+								<input style={inputStyle} type="number" value={form.grupo}
+									onChange={e => setForm(f => ({ ...f, grupo: e.target.value }))} />
+							</F>
+							<F label="Estado">
+								<select style={selectStyle} value={form.estado}
+									onChange={e => setForm(f => ({ ...f, estado: e.target.value }))}>
+									{ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
+								</select>
+							</F>
+							<div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+								<label style={{ color: '#fff', fontSize: '0.88rem' }}>Capitán de grupo</label>
+								<IonToggle checked={form.capitan}
+									onIonChange={e => setForm(f => ({ ...f, capitan: e.detail.checked }))} />
+							</div>
+							<div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+								<label style={{ color: '#fff', fontSize: '0.88rem' }}>Auxiliar de grupo</label>
+								<IonToggle checked={form.auxiliar}
+									onIonChange={e => setForm(f => ({ ...f, auxiliar: e.detail.checked }))} />
+							</div>
+							<F label="Observaciones">
+								<textarea style={{ ...inputStyle, resize: 'none' } as React.CSSProperties}
+									rows={3} value={form.observaciones}
+									onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))} />
+							</F>
+
+							<IonButton expand="block" onClick={handleSave} disabled={saving} style={{ marginTop: 8 }}>
+								{saving ? <IonSpinner name="crescent" /> : 'Actualizar Publicador'}
+							</IonButton>
+						</div>
+					</IonContent>
+				</IonModal>
 			</IonContent>
 
-			<IonAlert isOpen={Boolean(error)} onDidDismiss={() => setError(null)} header="Error" message={error || ''} buttons={['OK']} />
-			<IonAlert isOpen={Boolean(successMsg)} onDidDismiss={() => setSuccessMsg(null)} header="✅ Actualizado" message={successMsg || ''} buttons={['OK']} />
+			{Boolean(error) && (
+				<IonAlert
+					isOpen
+					onDidDismiss={() => setError(null)}
+					header="Error"
+					message={error || ''}
+					buttons={['OK']}
+				/>
+			)}
+			{Boolean(successMsg) && (
+				<IonAlert
+					isOpen
+					onDidDismiss={() => setSuccessMsg(null)}
+					header="✅ Actualizado"
+					message={successMsg || ''}
+					buttons={['OK']}
+				/>
+			)}
 		</IonPage>
 	)
 }
