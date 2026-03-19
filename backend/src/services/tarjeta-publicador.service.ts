@@ -2,7 +2,8 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import fs from 'fs/promises'
 import { Publicador, Registro } from '../types'
 
-const TEMPLATE_DEFAULT_PATH = 'C:/Users/LENOVO/AppData/Roaming/Cursor/User/workspaceStorage/a3f12c29231948dc7877fed093bde9f1/pdfs/S-21_S_TARJETA_PUBLICADOR_EDITABLE.pdf'
+const TEMPLATE_DEFAULT_PATH =
+	'C:/Users/LENOVO/AppData/Roaming/Cursor/User/workspaceStorage/a3f12c29231948dc7877fed093bde9f1/pdfs/S-21_S_TARJETA_PUBLICADOR_EDITABLE.pdf'
 
 const PRECUSOR_SKIP = new Set<string>([
 	'PUBLICADOR',
@@ -40,15 +41,21 @@ const TOTAL_Y = 389
 export class TarjetaPublicadorService {
 	async generarTarjetaS21(publicador: Publicador, registros: Registro[]): Promise<Uint8Array> {
 		const templatePath = process.env.S21_TEMPLATE_PATH || TEMPLATE_DEFAULT_PATH
-		const templateBytes = await fs.readFile(templatePath)
 
-		const doc = await PDFDocument.load(templateBytes)
-		const page = doc.getPage(0)
+		let templateBytes: Uint8Array | null = null
+		try {
+			templateBytes = await fs.readFile(templatePath)
+		} catch {
+			templateBytes = null
+		}
+
+		const doc = templateBytes ? await PDFDocument.load(templateBytes) : await PDFDocument.create()
+		const page = doc.getPageCount() > 0 ? doc.getPage(0) : doc.addPage([595.2, 841.9])
 		const font = await doc.embedFont(StandardFonts.Helvetica)
 
-		const annoMasReciente = registros[0]?.anno_servicio
-		const registrosAnno = typeof annoMasReciente === 'number'
-			? registros.filter((r) => r.anno_servicio === annoMasReciente)
+		const annoMasReciente = Number(registros[0]?.anno_servicio ?? NaN)
+		const registrosAnno = !isNaN(annoMasReciente)
+			? registros.filter((r) => Number(r.anno_servicio) === annoMasReciente)
 			: []
 
 		const precursor = publicador.precursor
@@ -109,7 +116,7 @@ export class TarjetaPublicadorService {
 			color: rgb(0, 0, 0),
 		})
 
-		if (typeof annoMasReciente === 'number') {
+		if (!isNaN(annoMasReciente)) {
 			page.drawText(String(annoMasReciente), {
 				x: 220,
 				y: 671,
