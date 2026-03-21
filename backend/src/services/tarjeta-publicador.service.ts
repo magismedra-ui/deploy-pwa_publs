@@ -267,6 +267,24 @@ function annoMasReciente(registros: Registro[]): number | null {
 	return max
 }
 
+/**
+ * Registros del año de servicio vigente (máximo anno_servicio numérico).
+ * Los registros con `anno_servicio` null se incluyen (datos incompletos en BD
+ * pero pertenecen al mismo año que el resto del lote vigente).
+ * Los que tienen otro año explícito se excluyen.
+ */
+function registrosDelAnoVigente(registros: Registro[]): Registro[] {
+	if (registros.length === 0) return []
+	const vigente = annoMasReciente(registros)
+	if (vigente == null) return registros
+	return registros.filter((r) => {
+		const a = parseAnnoServicio(r.anno_servicio)
+		if (a === vigente) return true
+		if (a == null) return true
+		return false
+	})
+}
+
 // ─── Generador principal ────────────────────────────────────────────────────
 
 export async function generateS21PDF(
@@ -738,15 +756,16 @@ export class TarjetaPublicadorService {
 		publicador: Publicador,
 		registros: Registro[],
 	): Promise<Uint8Array> {
-		const annoVigente = annoMasReciente(registros)
-		const filtrados =
-			annoVigente != null
-				? registros.filter(
-						(r) => parseAnnoServicio(r.anno_servicio) === annoVigente,
-					)
-				: []
+		const filtrados = registrosDelAnoVigente(registros)
+		const annoVigente = annoMasReciente(filtrados)
 
-		const recordsS21 = filtrados.map((r) => registroParaS21(r))
+		const recordsS21 = filtrados.map((r) => {
+			const row = registroParaS21(r)
+			if (annoVigente != null && row.anno_servicio === '') {
+				return { ...row, anno_servicio: String(annoVigente) }
+			}
+			return row
+		})
 		const pubS21 = publicadorParaS21(publicador)
 
 		return generateS21PDF(pubS21, recordsS21)
