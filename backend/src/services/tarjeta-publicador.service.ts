@@ -268,15 +268,36 @@ function annoMasReciente(registros: Registro[]): number | null {
 }
 
 /**
- * Registros del año de servicio vigente (máximo anno_servicio numérico).
- * Los registros con `anno_servicio` null se incluyen (datos incompletos en BD
- * pero pertenecen al mismo año que el resto del lote vigente).
- * Los que tienen otro año explícito se excluyen.
+ * Etiqueta del año de servicio (S-21): de septiembre del año calendario
+ * anterior hasta agosto del año calendario de la etiqueta.
+ * Ej.: marzo 2026 → 2026; octubre 2025 → 2026; octubre 2026 → 2027.
  */
-function registrosDelAnoVigente(registros: Registro[]): Registro[] {
+function añoServicioSegunFechaCalendario(d: Date): number {
+	const mes = d.getMonth() + 1
+	const año = d.getFullYear()
+	if (mes >= 9) return año + 1
+	return año
+}
+
+/**
+ * Año de servicio a usar en cabecera y filtro: no quedarse solo en la BD
+ * (p. ej. solo filas 2025) si el año vigente por calendario ya es 2026.
+ */
+function annoVigenteServicio(registros: Registro[]): number {
+	const desdeDb = annoMasReciente(registros)
+	const desdeCal = añoServicioSegunFechaCalendario(new Date())
+	return Math.max(desdeDb ?? 0, desdeCal)
+}
+
+/**
+ * Registros del año de servicio `vigente` (etiqueta numérica).
+ * Incluye `anno_servicio` null (mismo lote vigente). Excluye otros años.
+ */
+function registrosDelAnoVigente(
+	registros: Registro[],
+	vigente: number,
+): Registro[] {
 	if (registros.length === 0) return []
-	const vigente = annoMasReciente(registros)
-	if (vigente == null) return registros
 	return registros.filter((r) => {
 		const a = parseAnnoServicio(r.anno_servicio)
 		if (a === vigente) return true
@@ -290,6 +311,7 @@ function registrosDelAnoVigente(registros: Registro[]): Registro[] {
 export async function generateS21PDF(
 	pub: PublicadorS21,
 	records: RegistroS21[],
+	annoServicioCabecera: string,
 ): Promise<Uint8Array> {
 	const doc = await PDFDocument.create()
 	const fReg = await doc.embedFont(StandardFonts.Helvetica)
@@ -300,12 +322,6 @@ export async function generateS21PDF(
 	for (const r of records) {
 		recByMes.set(r.mes.toLowerCase(), r)
 	}
-
-	const annoVigente = records.length
-		? [...records].sort((a, b) =>
-				b.anno_servicio.localeCompare(a.anno_servicio),
-			)[0].anno_servicio
-		: ''
 
 	const TITLE = 'REGISTRO DE PUBLICADOR DE LA CONGREGACIÓN'
 	const TITLE_SIZE = 13
@@ -517,7 +533,7 @@ export async function generateS21PDF(
 	const TABLE_TOP = curY - 8
 
 	const COL_HEADERS: string[][] = [
-		['Año de', 'servicio', annoVigente],
+		['Año de', 'servicio', annoServicioCabecera],
 		['Participación', 'en el', 'ministerio'],
 		['Cursos', 'bíblicos'],
 		['Precursor', 'auxiliar'],
@@ -756,18 +772,18 @@ export class TarjetaPublicadorService {
 		publicador: Publicador,
 		registros: Registro[],
 	): Promise<Uint8Array> {
-		const filtrados = registrosDelAnoVigente(registros)
-		const annoVigente = annoMasReciente(filtrados)
+		const vigente = annoVigenteServicio(registros)
+		const filtrados = registrosDelAnoVigente(registros, vigente)
 
 		const recordsS21 = filtrados.map((r) => {
 			const row = registroParaS21(r)
-			if (annoVigente != null && row.anno_servicio === '') {
-				return { ...row, anno_servicio: String(annoVigente) }
+			if (row.anno_servicio === '') {
+				return { ...row, anno_servicio: String(vigente) }
 			}
 			return row
 		})
 		const pubS21 = publicadorParaS21(publicador)
 
-		return generateS21PDF(pubS21, recordsS21)
+		return generateS21PDF(pubS21, recordsS21, String(vigente))
 	}
 }
