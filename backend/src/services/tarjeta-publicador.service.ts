@@ -63,8 +63,6 @@ const MONTHS = [
 const C = {
 	black: rgb(0, 0, 0),
 	white: rgb(1, 1, 1),
-	gray: rgb(0.91, 0.91, 0.91),
-	grayRow: rgb(0.96, 0.96, 0.96),
 	grayTxt: rgb(0.4, 0.4, 0.4),
 }
 
@@ -521,14 +519,13 @@ export async function generateS21PDF(
 	for (let mi = 0; mi < MONTHS.length; mi++) {
 		const mes = MONTHS[mi]
 		const rec = recByMes.get(mes.toLowerCase())
-		const bg = mi % 2 === 0 ? C.white : C.grayRow
 
 		page.drawRectangle({
 			x: M_LEFT,
 			y: rowY - ROW_H,
 			width: CONTENT_W,
 			height: ROW_H,
-			color: bg,
+			color: C.white,
 		})
 
 		cx = M_LEFT
@@ -641,14 +638,6 @@ export async function generateS21PDF(
 		rowY -= ROW_H
 	}
 
-	page.drawRectangle({
-		x: M_LEFT,
-		y: rowY - TOTAL_H,
-		width: CONTENT_W,
-		height: TOTAL_H,
-		color: C.gray,
-	})
-
 	const totalY = rowY - TOTAL_H + 6
 	const labelSpanW = COL_W[0] + COL_W[1] + COL_W[2] + COL_W[3]
 	const cxHoras = M_LEFT + labelSpanW
@@ -685,14 +674,25 @@ export async function generateS21PDF(
 		borderWidth: 0.8,
 	})
 
-	const tableBottom = rowY - TOTAL_H
-	page.drawRectangle({
-		x: M_LEFT,
-		y: tableBottom,
-		width: CONTENT_W,
-		height: TABLE_TOP - tableBottom,
-		borderColor: C.black,
-		borderWidth: 1.2,
+	// Borde exterior — izq y der terminan en fondo de Agosto (no bajan al Total)
+	const monthsBottom = rowY
+	page.drawLine({
+		start: { x: M_LEFT, y: TABLE_TOP },
+		end: { x: M_LEFT + CONTENT_W, y: TABLE_TOP },
+		thickness: 1.2,
+		color: C.black,
+	})
+	page.drawLine({
+		start: { x: M_LEFT, y: TABLE_TOP },
+		end: { x: M_LEFT, y: monthsBottom },
+		thickness: 1.2,
+		color: C.black,
+	})
+	page.drawLine({
+		start: { x: M_LEFT + CONTENT_W, y: TABLE_TOP },
+		end: { x: M_LEFT + CONTENT_W, y: monthsBottom },
+		thickness: 1.2,
+		color: C.black,
 	})
 
 	page.drawText('S-21-S  11/23', {
