@@ -29,12 +29,6 @@ export interface RegistroS21 {
 	notas: string
 }
 
-const PRECUSOR_SKIP = new Set<string>([
-	'PUBLICADOR',
-	'PUBLICADORA',
-	'PUBLICADOR NO BAUTIZADO',
-])
-
 // ─── Constantes de layout ───────────────────────────────────────────────────
 
 const PAGE_W = 612
@@ -180,45 +174,76 @@ function drawCheckbox(
 	}
 }
 
-function esPrecursorCongregacion(publicador: Publicador): boolean {
-	const p = publicador.precursor
-	return p != null && !PRECUSOR_SKIP.has(String(p).toUpperCase().trim())
+/**
+ * Año de servicio (anno_servicio): Septiembre del año N-1 → Agosto del año N
+ * (ej. 2026 = sept/2025 … ago/2026). Solo se usan registros del último año
+ * vigente (máximo anno_servicio).
+ */
+function parseAnnoServicio(value: unknown): number | null {
+	if (value == null || value === '') return null
+	const n = Number(value)
+	return Number.isNaN(n) ? null : n
 }
 
-/** Mapea un registro de BD al formato del PDF (Pub / Precursor auxiliar / otro). */
-function registroParaS21(
-	r: Registro,
-	esPrecursor: boolean,
-): RegistroS21 {
-	const anno =
-		r.anno_servicio != null ? String(r.anno_servicio) : ''
-	const mes = r.mes ?? ''
-	const cursos = r.cursos != null ? String(r.cursos) : '0'
-	const horas = r.horas != null ? String(r.horas) : '0'
-	const notas = r.notas ?? ''
-
-	let precursorPdf = 'Pub'
-	if (esPrecursor) {
-		const pr = String(r.precursor ?? '').toLowerCase().trim()
-		if (
-			pr === 'precursor auxiliar' ||
-			pr.includes('auxiliar')
-		) {
-			precursorPdf = 'Precursor auxiliar'
-		} else {
-			// Cualquier otro precursor en congregación: muestra columna horas
-			precursorPdf = 'Precursor regular'
-		}
+function coerceBoolean(value: unknown): boolean {
+	if (typeof value === 'boolean') return value
+	if (typeof value === 'string') {
+		const t = value.trim().toLowerCase()
+		return t === 'true' || t === '1'
 	}
+	if (typeof value === 'number') return value !== 0
+	return false
+}
+
+/** Coincide el mes de BD con la fila del PDF (Septiembre…Agosto). */
+function normalizeNombreMes(mes: string | undefined): string {
+	if (!mes) return ''
+	const t = mes.trim()
+	const lower = t.toLowerCase()
+	const canon = MONTHS.find((m) => m.toLowerCase() === lower)
+	return canon ?? t
+}
+
+/**
+ * Precursor auxiliar: texto literal o abreviatura "PA" (según datos de registro).
+ * Horas: en blanco solo si precursor es "pub" (sin distinguir mayúsculas).
+ */
+function precursorParaPdf(raw: string | undefined): string {
+	const s = String(raw ?? '').trim()
+	const low = s.toLowerCase()
+	if (low === 'precursor auxiliar' || low === 'pa') {
+		return 'Precursor auxiliar'
+	}
+	if (low === 'pub') return 'Pub'
+	return s
+}
+
+/** Mapea un registro de BD al formato del PDF (solo campos de `registro`). */
+function registroParaS21(r: Registro): RegistroS21 {
+	const annoNum = parseAnnoServicio(r.anno_servicio)
+	const anno = annoNum != null ? String(annoNum) : ''
+	const mesNombre = normalizeNombreMes(r.mes)
+
+	const cursosRaw = r.cursos
+	const cursos =
+		cursosRaw != null && String(cursosRaw).trim() !== ''
+			? String(cursosRaw)
+			: '0'
+
+	const horasRaw = r.horas
+	const horas =
+		horasRaw != null && String(horasRaw).trim() !== ''
+			? String(horasRaw)
+			: '0'
 
 	return {
 		anno_servicio: anno,
-		mes,
-		predico: Boolean(r.predico),
+		mes: mesNombre,
+		predico: coerceBoolean(r.predico),
 		cursos,
-		precursor: precursorPdf,
+		precursor: precursorParaPdf(r.precursor),
 		horas,
-		notas,
+		notas: r.notas ?? '',
 	}
 }
 
@@ -236,8 +261,8 @@ function publicadorParaS21(pub: Publicador): PublicadorS21 {
 function annoMasReciente(registros: Registro[]): number | null {
 	let max: number | null = null
 	for (const r of registros) {
-		const n = Number(r.anno_servicio)
-		if (!Number.isNaN(n) && (max === null || n > max)) max = n
+		const n = parseAnnoServicio(r.anno_servicio)
+		if (n != null && (max === null || n > max)) max = n
 	}
 	return max
 }
@@ -713,14 +738,15 @@ export class TarjetaPublicadorService {
 		publicador: Publicador,
 		registros: Registro[],
 	): Promise<Uint8Array> {
-		const anno = annoMasReciente(registros)
+		const annoVigente = annoMasReciente(registros)
 		const filtrados =
-			anno != null
-				? registros.filter((r) => Number(r.anno_servicio) === anno)
-				: registros
+			annoVigente != null
+				? registros.filter(
+						(r) => parseAnnoServicio(r.anno_servicio) === annoVigente,
+					)
+				: []
 
-		const esPrec = esPrecursorCongregacion(publicador)
-		const recordsS21 = filtrados.map((r) => registroParaS21(r, esPrec))
+		const recordsS21 = filtrados.map((r) => registroParaS21(r))
 		const pubS21 = publicadorParaS21(publicador)
 
 		return generateS21PDF(pubS21, recordsS21)
