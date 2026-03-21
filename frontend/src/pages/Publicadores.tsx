@@ -16,13 +16,16 @@ import {
 	IonLoading,
 	IonAlert,
 	IonSelect,
-	IonSelectOption
+	IonSelectOption,
+	IonSpinner,
 } from '@ionic/react'
+import { PDFDocument } from 'pdf-lib'
 import { useState, useEffect } from 'react'
-import { add, create, trash } from 'ionicons/icons'
+import { add, create, trash, downloadOutline } from 'ionicons/icons'
 import { publicadorRepository } from '../repositories/publicador.repository'
 import { grupoRepository } from '../repositories/grupo.repository'
 import { Publicador, Grupo } from '../types'
+import { fetchTarjetaS21PdfBytes } from '../utils/tarjeta-s21-pdf'
 
 const Publicadores: React.FC = () => {
 	const [publicadores, setPublicadores] = useState<Publicador[]>([])
@@ -32,6 +35,7 @@ const Publicadores: React.FC = () => {
 	const [editingPublicador, setEditingPublicador] = useState<Publicador | null>(null)
 	const [formData, setFormData] = useState<Partial<Publicador>>({})
 	const [error, setError] = useState<string | null>(null)
+	const [downloadingAll, setDownloadingAll] = useState(false)
 
 	useEffect(() => {
 		loadData()
@@ -89,6 +93,44 @@ const Publicadores: React.FC = () => {
 		setShowModal(true)
 	}
 
+	const handleGenerarPDFBytes = (pub: Publicador) =>
+		fetchTarjetaS21PdfBytes(pub)
+
+	const handleDescargarTodos = async () => {
+		if (publicadores.length === 0) return
+		setDownloadingAll(true)
+		try {
+			const pdfsIndividuales: Uint8Array[] = []
+			for (const pub of publicadores) {
+				const bytes = await handleGenerarPDFBytes(pub)
+				if (bytes) pdfsIndividuales.push(bytes)
+			}
+			const mergedDoc = await PDFDocument.create()
+			for (const pdfBytes of pdfsIndividuales) {
+				const srcDoc = await PDFDocument.load(pdfBytes)
+				const pages = await mergedDoc.copyPages(
+					srcDoc,
+					srcDoc.getPageIndices(),
+				)
+				for (const page of pages) mergedDoc.addPage(page)
+			}
+			const mergedBytes = await mergedDoc.save()
+			const blob = new Blob([mergedBytes as BlobPart], {
+				type: 'application/pdf',
+			})
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement('a')
+			a.href = url
+			a.download = 'S-21_Todos_los_Publicadores.pdf'
+			a.click()
+			URL.revokeObjectURL(url)
+		} catch (err: any) {
+			setError(err.message || 'Error al generar PDF masivo')
+		} finally {
+			setDownloadingAll(false)
+		}
+	}
+
 	return (
 		<IonPage>
 			<IonHeader>
@@ -101,30 +143,54 @@ const Publicadores: React.FC = () => {
 					<IonLoading isOpen={true} message="Cargando..." />
 				) : (
 					<>
-						<IonList>
-							{publicadores.map((publicador) => (
-								<IonItem key={publicador.id}>
+						{/* Padding inferior para que la fila TOTAL no quede tapada por IonFab */}
+						<div style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
+							<IonList>
+								{publicadores.map((publicador) => (
+									<IonItem key={publicador.id}>
+										<IonLabel>
+											<h2>{publicador.nombre}</h2>
+											<p>{publicador.correo}</p>
+											<p>{publicador.syncStatus}</p>
+										</IonLabel>
+										<IonButton
+											fill="clear"
+											onClick={() => handleEdit(publicador)}
+										>
+											<IonIcon icon={create} />
+										</IonButton>
+										<IonButton
+											fill="clear"
+											color="danger"
+											onClick={() => handleDelete(publicador.id!)}
+										>
+											<IonIcon icon={trash} />
+										</IonButton>
+									</IonItem>
+								))}
+								<IonItem key="total-publicadores" lines="full">
 									<IonLabel>
-										<h2>{publicador.nombre}</h2>
-										<p>{publicador.correo}</p>
-										<p>{publicador.syncStatus}</p>
+										<h2>TOTAL DE PUBLICADORES</h2>
+										<p>{publicadores.length}</p>
 									</IonLabel>
 									<IonButton
-										fill="clear"
-										onClick={() => handleEdit(publicador)}
+										fill="solid"
+										color="success"
+										onClick={handleDescargarTodos}
+										disabled={downloadingAll || publicadores.length === 0}
 									>
-										<IonIcon icon={create} />
-									</IonButton>
-									<IonButton
-										fill="clear"
-										color="danger"
-										onClick={() => handleDelete(publicador.id!)}
-									>
-										<IonIcon icon={trash} />
+										{downloadingAll ? (
+											<IonSpinner
+												name="crescent"
+												style={{ width: 18, height: 18 }}
+											/>
+										) : (
+											<IonIcon icon={downloadOutline} />
+										)}
 									</IonButton>
 								</IonItem>
-							))}
-						</IonList>
+							</IonList>
+						</div>
 						<IonFab vertical="bottom" horizontal="end" slot="fixed">
 							<IonFabButton onClick={handleNew}>
 								<IonIcon icon={add} />

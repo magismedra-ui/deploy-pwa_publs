@@ -5,10 +5,10 @@ import {
 } from '@ionic/react'
 import React, { useState, useEffect } from 'react'
 import { createOutline, downloadOutline, arrowBackOutline } from 'ionicons/icons'
+import { PDFDocument } from 'pdf-lib'
 import { apiService } from '../services/api'
 import { Publicador } from '../types'
-import axios from 'axios'
-import { storage } from '../utils/storage'
+import { fetchTarjetaS21PdfBytes } from '../utils/tarjeta-s21-pdf'
 
 const SEXOS = ['HOMBRE', 'MUJER']
 const ESPERANZAS = ['OTRAS OVEJAS', 'UNGIDO']
@@ -69,6 +69,7 @@ const Publs: React.FC = () => {
 	const [saving, setSaving] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [successMsg, setSuccessMsg] = useState<string | null>(null)
+	const [downloadingAll, setDownloadingAll] = useState(false)
 
 	useEffect(() => { loadPublicadores() }, [])
 
@@ -144,17 +145,12 @@ const Publs: React.FC = () => {
 	const handleDownload = async (pub: Publicador) => {
 		if (!pub.id) return
 		try {
-			const token = await storage.getToken()
-			const apiBaseUrl =
-				import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
-
-			const endpoint = `${apiBaseUrl}/publicador/${pub.id}/tarjeta-s21`
-			const res = await axios.get(endpoint, {
-				responseType: 'blob',
-				headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-			})
-
-			const blob = new Blob([res.data], { type: 'application/pdf' })
+			const bytes = await fetchTarjetaS21PdfBytes(pub)
+			if (!bytes) {
+				setError('Error al descargar PDF')
+				return
+			}
+			const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' })
 			const url = URL.createObjectURL(blob)
 			const a = document.createElement('a')
 			a.href = url
@@ -163,6 +159,44 @@ const Publs: React.FC = () => {
 			URL.revokeObjectURL(url)
 		} catch (e: any) {
 			setError(e?.response?.data?.error?.message || e?.message || 'Error al descargar PDF')
+		}
+	}
+
+	const handleGenerarPDFBytes = (pub: Publicador) =>
+		fetchTarjetaS21PdfBytes(pub)
+
+	const handleDescargarTodos = async () => {
+		if (publicadores.length === 0) return
+		setDownloadingAll(true)
+		try {
+			const pdfsIndividuales: Uint8Array[] = []
+			for (const pub of publicadores) {
+				const bytes = await handleGenerarPDFBytes(pub)
+				if (bytes) pdfsIndividuales.push(bytes)
+			}
+			const mergedDoc = await PDFDocument.create()
+			for (const pdfBytes of pdfsIndividuales) {
+				const srcDoc = await PDFDocument.load(pdfBytes)
+				const pages = await mergedDoc.copyPages(
+					srcDoc,
+					srcDoc.getPageIndices(),
+				)
+				for (const page of pages) mergedDoc.addPage(page)
+			}
+			const mergedBytes = await mergedDoc.save()
+			const blob = new Blob([mergedBytes as BlobPart], {
+				type: 'application/pdf',
+			})
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement('a')
+			a.href = url
+			a.download = 'S-21_Todos_los_Publicadores.pdf'
+			a.click()
+			URL.revokeObjectURL(url)
+		} catch (e: any) {
+			setError(e?.message || 'Error al generar PDF masivo')
+		} finally {
+			setDownloadingAll(false)
 		}
 	}
 
@@ -223,6 +257,67 @@ const Publs: React.FC = () => {
 								</div>
 							</div>
 						))}
+						{publicadores.length > 0 && (
+							<div
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'space-between',
+									padding: '10px 14px',
+									marginBottom: 8,
+									borderRadius: 10,
+									background: '#041955',
+								}}
+							>
+								<div style={{ flex: 1, minWidth: 0 }}>
+									<p
+										style={{
+											margin: 0,
+											fontWeight: 600,
+											fontSize: '0.88rem',
+											color: '#fff',
+										}}
+									>
+										TOTAL DE PUBLICADORES
+									</p>
+									<p
+										style={{
+											margin: '2px 0 0',
+											fontSize: '0.72rem',
+											color: '#97B4FF',
+										}}
+									>
+										{publicadores.length}
+									</p>
+								</div>
+								<div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
+									<button
+										type="button"
+										onClick={handleDescargarTodos}
+										disabled={downloadingAll}
+										style={{
+											background: '#2dd36f',
+											border: 'none',
+											borderRadius: 8,
+											cursor: downloadingAll ? 'default' : 'pointer',
+											color: '#fff',
+											padding: '6px 10px',
+											fontSize: '1rem',
+											opacity: downloadingAll ? 0.7 : 1,
+										}}
+									>
+										{downloadingAll ? (
+											<IonSpinner
+												name="crescent"
+												style={{ width: 18, height: 18 }}
+											/>
+										) : (
+											<IonIcon icon={downloadOutline} />
+										)}
+									</button>
+								</div>
+							</div>
+						)}
 						{filtrados.length === 0 && (
 							<p style={{ textAlign: 'center', color: '#97B4FF', marginTop: '2rem' }}>No se encontraron publicadores</p>
 						)}
