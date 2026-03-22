@@ -55,7 +55,14 @@ export function useAddInfoPubl() {
 			try {
 				const created = await apiService.post<AddInfoPubl>(ENDPOINT, cleanPayload)
 				return { ...created, _syncStatus: 'synced' as const }
-			} catch {
+			} catch (err) {
+				// Solo cola offline cuando no hay red; si hay error 4xx/5xx con red, propagar
+				const offline =
+					typeof navigator !== 'undefined' && !navigator.onLine
+				if (!offline) {
+					if (err instanceof Error) throw err
+					throw new Error(String(err))
+				}
 				const tempId = -Date.now()
 				const local: AddInfoPubl = { ...payload, id: tempId, _syncStatus: 'pending' }
 				await saveLocally(STORE, [local])
@@ -77,7 +84,13 @@ export function useAddInfoPubl() {
 				const result = { ...updated, _syncStatus: 'synced' as const }
 				await saveLocally(STORE, [result])
 				return result
-			} catch {
+			} catch (err) {
+				const offline =
+					typeof navigator !== 'undefined' && !navigator.onLine
+				if (!offline) {
+					if (err instanceof Error) throw err
+					throw new Error(String(err))
+				}
 				const existing = (await getLocally(STORE) as AddInfoPubl[]).find((a) => a.id === id)
 				const local: AddInfoPubl = {
 					id,
@@ -104,7 +117,13 @@ export function useAddInfoPubl() {
 		mutationFn: async (id) => {
 			try {
 				await apiService.delete(`${ENDPOINT}/${id}`)
-			} catch {
+			} catch (err) {
+				const offline =
+					typeof navigator !== 'undefined' && !navigator.onLine
+				if (!offline) {
+					if (err instanceof Error) throw err
+					throw new Error(String(err))
+				}
 				const existing = (await getLocally(STORE) as AddInfoPubl[]).find((a) => a.id === id)
 				if (existing) {
 					await saveLocally(STORE, [{ ...existing, _deleted: true, _syncStatus: 'pending' }])

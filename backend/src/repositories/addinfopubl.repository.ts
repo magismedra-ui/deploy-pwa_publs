@@ -1,6 +1,5 @@
 import pool from '../config/database'
 import { AddInfoPubl } from '../types'
-import { generateUUID } from '../utils/uuid'
 
 export interface AddInfoPublWithPublicador extends AddInfoPubl {
 	publicador_nombre?: string
@@ -41,14 +40,15 @@ export class AddInfoPublRepository {
 		observaciones?: string | null
 		pastoreo?: boolean
 	}): Promise<AddInfoPubl> {
-		const id = generateUUID()
 		const pastoreo = data.pastoreo === true
+		// No enviar `id`: en Neon suele ser SERIAL o UUID con DEFAULT.
+		// Insertar UUID en columna INTEGER provocaba:
+		// invalid input syntax for type integer: "uuid..."
 		const result = await pool.query(
-			`INSERT INTO addinfopubl (id, idpublicador, fecha, observaciones, pastoreo)
-			 VALUES ($1, $2, $3, $4, $5)
+			`INSERT INTO addinfopubl (idpublicador, fecha, observaciones, pastoreo)
+			 VALUES ($1, $2, $3, $4)
 			 RETURNING *`,
 			[
-				id,
 				data.idpublicador,
 				data.fecha ?? null,
 				data.observaciones ?? null,

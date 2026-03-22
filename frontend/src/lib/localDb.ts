@@ -6,9 +6,9 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 // ─────────────────────────────────────────────────────────────────────────────
 interface TJPublsDB extends DBSchema {
 	publicadores: {
-		key: number
+		key: string | number
 		value: {
-			id: number
+			id: string | number
 			nombre: string
 			correo?: string | null
 			sexo?: string | null

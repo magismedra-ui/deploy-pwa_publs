@@ -32,7 +32,7 @@ export interface PublicadorPayload {
 }
 
 export interface Publicador extends PublicadorPayload {
-	id: number
+	id: string | number
 	created_at?: string | null
 	_syncStatus?: 'pending' | 'synced'
 	_deleted?: boolean
@@ -59,9 +59,15 @@ export function usePublicadores() {
 				const withSync = remote.map((p) => ({ ...p, _syncStatus: 'synced' as const }))
 				await saveLocally(STORE, withSync)
 				return withSync
-			} catch {
-				// Offline: devolver datos locales
-				return getLocally(STORE) as Promise<Publicador[]>
+			} catch (err) {
+				// Solo usar IndexedDB offline; con red, datos locales pueden tener IDs incompatibles con el API
+				const offline =
+					typeof navigator !== 'undefined' && !navigator.onLine
+				if (offline) {
+					return getLocally(STORE) as Promise<Publicador[]>
+				}
+				if (err instanceof Error) throw err
+				throw new Error(String(err))
 			}
 		},
 	})
