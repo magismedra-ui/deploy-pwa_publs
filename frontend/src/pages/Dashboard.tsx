@@ -82,10 +82,10 @@ const Dashboard: React.FC = () => {
 	const renderContent = () => {
 		switch (activeTab) {
 			case 'publicadores': return <Publicadores embedded />
-			case 'grupos':       return <Grupos />
+			case 'grupos':       return <Grupos embedded />
 			case 'asistencias':  return <Asistencias />
 			case 'registros':    return <Registros />
-			case 'addinfopubl':  return <AddInfoPubl />
+			case 'addinfopubl':  return <AddInfoPubl embedded />
 		}
 	}
 
@@ -143,19 +143,23 @@ const Dashboard: React.FC = () => {
 			<IonContent fullscreen>
 				{renderContent()}
 
-				{/* ── FAB ─────────────────────────────────────────────── */}
-				<IonFab slot="fixed" vertical="bottom" horizontal="end">
-					<IonFabButton
-						color="primary"
-						onClick={() =>
-							activeTab === 'asistencias'
-								? history.push('/tabs/home?openAsistencia=1')
-								: history.push(fabRoutes[activeTab])
-						}
-					>
-						<IonIcon icon={add} />
-					</IonFabButton>
-				</IonFab>
+				{/* FAB global: no mostrar en tabs que ya traen FAB + modal propios (embedded) */}
+				{activeTab !== 'grupos' &&
+					activeTab !== 'publicadores' &&
+					activeTab !== 'addinfopubl' && (
+					<IonFab slot="fixed" vertical="bottom" horizontal="end">
+						<IonFabButton
+							color="primary"
+							onClick={() =>
+								activeTab === 'asistencias'
+									? history.push('/tabs/home?openAsistencia=1')
+									: history.push(fabRoutes[activeTab])
+							}
+						>
+							<IonIcon icon={add} />
+						</IonFabButton>
+					</IonFab>
+				)}
 			</IonContent>
 		</IonPage>
 	)

@@ -17,6 +17,7 @@ import {
 import React, { useState, useEffect } from 'react'
 import { arrowBackOutline } from 'ionicons/icons'
 import { apiService } from '../services/api'
+import { useLoadSequence } from '../hooks/useLoadSequence'
 import { Publicador, Registro } from '../types'
 
 const errMsg = (e: unknown): string => {
@@ -63,8 +64,11 @@ const Registros: React.FC = () => {
 		color: 'success' | 'danger'
 	}>({ show: false, message: '', color: 'success' })
 
+	const loadSeq = useLoadSequence()
+
 	const loadData = async (opts?: { silent?: boolean }) => {
 		const silent = Boolean(opts?.silent)
+		const seq = loadSeq.next()
 		if (!silent) setLoading(true)
 		setError(null)
 		try {
@@ -72,6 +76,7 @@ const Registros: React.FC = () => {
 				apiService.get<Registro[]>('/registro'),
 				apiService.get<Publicador[]>('/publicador'),
 			])
+			if (!loadSeq.isCurrent(seq)) return
 			const list = Array.isArray(regData) ? regData : []
 			setRegistros(
 				list.sort((a, b) => {
@@ -83,9 +88,11 @@ const Registros: React.FC = () => {
 			)
 			setPublicadores(Array.isArray(pubData) ? pubData : [])
 		} catch (e: unknown) {
-			setError(errMsg(e) || 'Error al cargar datos')
+			if (loadSeq.isCurrent(seq)) {
+				setError(errMsg(e) || 'Error al cargar datos')
+			}
 		} finally {
-			if (!silent) setLoading(false)
+			if (!silent && loadSeq.isCurrent(seq)) setLoading(false)
 		}
 	}
 

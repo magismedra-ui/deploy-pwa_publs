@@ -43,7 +43,12 @@ export class AddInfoPublService {
 		return data
 	}
 
-	async create(data: { idpublicador: string; fecha?: string | null; observaciones?: string | null }): Promise<AddInfoPubl> {
+	async create(data: {
+		idpublicador: string
+		fecha?: string | null
+		observaciones?: string | null
+		pastoreo?: boolean
+	}): Promise<AddInfoPubl> {
 		// Validar que el publicador existe
 		const publicador = await this.publicadorRepository.findById(data.idpublicador)
 		if (!publicador) {
@@ -57,7 +62,14 @@ export class AddInfoPublService {
 		return result
 	}
 
-	async update(id: string, data: { fecha?: string | null; observaciones?: string | null }): Promise<AddInfoPubl | null> {
+	async update(
+		id: string,
+		data: {
+			fecha?: string | null
+			observaciones?: string | null
+			pastoreo?: boolean
+		},
+	): Promise<AddInfoPubl | null> {
 		const result = await this.repository.update(id, data)
 		if (result) await deleteCachePattern('addinfopubl:*')
 		return result

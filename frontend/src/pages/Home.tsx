@@ -111,6 +111,7 @@ export interface InfoRecienteAsistencia extends InfoRecienteBase {
 	fecha_registro: string
 	presencia: number
 	zoom: number
+	total: number
 }
 
 export interface GrupoEstadoInforme {
@@ -184,8 +185,9 @@ function buildInfoAsistencia(
 			? ultima.fecha
 			: new Date(ultima.fecha).toISOString().split('T')[0])
 		: ''
-	const presencia = ultima?.presencial ?? 0
-	const zoom = ultima?.zoom ?? 0
+	const presencia = Number(ultima?.presencial ?? 0) || 0
+	const zoom = Number(ultima?.zoom ?? 0) || 0
+	const total = presencia + zoom
 	return {
 		id: 2,
 		note: 'Asistencia',
@@ -194,7 +196,8 @@ function buildInfoAsistencia(
 		complete: true,
 		fecha_registro: fechaRegistro,
 		presencia,
-		zoom
+		zoom,
+		total,
 	}
 }
 
@@ -502,6 +505,7 @@ const Home: React.FC = () => {
 													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Fecha registro:</span> { formatFechaRegistro(note.fecha_registro) }</p>
 													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Presencia:</span> { note.presencia }</p>
 													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Zoom:</span> { note.zoom }</p>
+													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Total:</span> { note.total }</p>
 												</>
 											) }
 										</div>

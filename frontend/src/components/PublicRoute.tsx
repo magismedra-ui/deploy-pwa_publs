@@ -1,7 +1,7 @@
 import { Redirect, Route } from 'react-router-dom'
 import type { ComponentProps } from 'react'
 import { useAuthContext } from '../contexts/AuthContext'
-import { IonLoading } from '@ionic/react'
+import { AuthLoadingScreen } from './AuthLoadingScreen'
 
 export const PublicRoute: React.FC<ComponentProps<typeof Route>> = ({
 	children,
@@ -10,7 +10,7 @@ export const PublicRoute: React.FC<ComponentProps<typeof Route>> = ({
 	const { isAuthenticated, loading } = useAuthContext()
 
 	if (loading) {
-		return <IonLoading isOpen={true} message="Cargando..." />
+		return <AuthLoadingScreen />
 	}
 
 	if (isAuthenticated) {

@@ -36,6 +36,7 @@ class DatabaseService {
 			await conn.open()
 			await this.createTables()
 			await this.migrateGrupoNroGrupo()
+			await this.migrateAddinfopublPastoreo()
 			this.initialized = true
 			console.log('SQLite inicializado correctamente')
 		} catch (error) {
@@ -123,6 +124,7 @@ class DatabaseService {
 				fecha TEXT,
 				observaciones TEXT,
 				idpublicador TEXT,
+				pastoreo INTEGER DEFAULT 0,
 				updatedAt INTEGER,
 				deleted INTEGER DEFAULT 0,
 				syncStatus TEXT DEFAULT 'pending'
@@ -147,6 +149,17 @@ class DatabaseService {
 			)
 		} catch {
 			// Columna ya existe o tabla sin nroGrupo en versión nueva
+		}
+	}
+
+	private async migrateAddinfopublPastoreo(): Promise<void> {
+		if (!this.db) return
+		try {
+			await this.db.execute(
+				'ALTER TABLE addinfopubl ADD COLUMN pastoreo INTEGER DEFAULT 0'
+			)
+		} catch {
+			// Columna ya existe
 		}
 	}
 

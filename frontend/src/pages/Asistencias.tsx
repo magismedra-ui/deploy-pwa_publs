@@ -15,6 +15,7 @@ import {
 import React, { useState, useEffect } from 'react'
 import { arrowBackOutline } from 'ionicons/icons'
 import { apiService } from '../services/api'
+import { useLoadSequence } from '../hooks/useLoadSequence'
 import { Asistencia } from '../types'
 
 const Asistencias: React.FC = () => {
@@ -28,6 +29,8 @@ const Asistencias: React.FC = () => {
 		message: string
 		color: 'success' | 'danger'
 	}>({ show: false, message: '', color: 'success' })
+
+	const loadSeq = useLoadSequence()
 
 	const deleteErrorMessage = (e: unknown): string => {
 		const err = e as {
@@ -43,16 +46,20 @@ const Asistencias: React.FC = () => {
 
 	async function loadAsistencias(opts?: { silent?: boolean }) {
 		const silent = Boolean(opts?.silent)
+		const seq = loadSeq.next()
 		if (!silent) setLoading(true)
 		try {
 			const data = await apiService.get<Asistencia[]>('/asistencia')
+			if (!loadSeq.isCurrent(seq)) return
 			setAsistencias(Array.isArray(data) ? data.sort((a, b) =>
 				new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
 			) : [])
 		} catch (e: any) {
-			setError(e.message || 'Error al cargar asistencias')
+			if (loadSeq.isCurrent(seq)) {
+				setError(e.message || 'Error al cargar asistencias')
+			}
 		} finally {
-			if (!silent) setLoading(false)
+			if (!silent && loadSeq.isCurrent(seq)) setLoading(false)
 		}
 	}
 

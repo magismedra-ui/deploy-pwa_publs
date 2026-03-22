@@ -21,6 +21,7 @@ import {
 import React, { useState, useEffect, useCallback } from 'react'
 import { add, arrowBackOutline, createOutline } from 'ionicons/icons'
 import { apiService } from '../services/api'
+import { useLoadSequence } from '../hooks/useLoadSequence'
 import { Publicador, Role, Usuario } from '../types'
 
 const errMsg = (e: unknown): string => {
@@ -79,6 +80,8 @@ const Usuarios: React.FC = () => {
 		color: 'success' | 'danger'
 	}>({ show: false, message: '', color: 'success' })
 
+	const loadSeq = useLoadSequence()
+
 	const nombreRol = useCallback(
 		(idrole: string | undefined) => {
 			if (!idrole) return '—'
@@ -101,10 +104,12 @@ const Usuarios: React.FC = () => {
 
 	async function loadData(opts?: { silent?: boolean }) {
 		const silent = Boolean(opts?.silent)
+		const seq = loadSeq.next()
 		if (!silent) setLoading(true)
 		setError(null)
 		try {
 			const uData = await apiService.get<Usuario[]>('/usuario')
+			if (!loadSeq.isCurrent(seq)) return
 			setUsuarios(
 				Array.isArray(uData)
 					? uData.sort((a, b) =>
@@ -114,12 +119,15 @@ const Usuarios: React.FC = () => {
 			)
 			try {
 				const rData = await apiService.get<Role[]>('/role')
-				setRoles(Array.isArray(rData) ? rData : [])
+				if (loadSeq.isCurrent(seq)) {
+					setRoles(Array.isArray(rData) ? rData : [])
+				}
 			} catch {
-				setRoles([])
+				if (loadSeq.isCurrent(seq)) setRoles([])
 			}
 			try {
 				const pData = await apiService.get<Publicador[]>('/publicador')
+				if (!loadSeq.isCurrent(seq)) return
 				const list = Array.isArray(pData) ? pData : []
 				setPublicadores(
 					list.sort((a, b) =>
@@ -127,12 +135,12 @@ const Usuarios: React.FC = () => {
 					),
 				)
 			} catch {
-				setPublicadores([])
+				if (loadSeq.isCurrent(seq)) setPublicadores([])
 			}
 		} catch (e: unknown) {
-			setError(errMsg(e))
+			if (loadSeq.isCurrent(seq)) setError(errMsg(e))
 		} finally {
-			if (!silent) setLoading(false)
+			if (!silent && loadSeq.isCurrent(seq)) setLoading(false)
 		}
 	}
 

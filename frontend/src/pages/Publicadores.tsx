@@ -20,6 +20,7 @@ import {
 	refreshOutline,
 } from 'ionicons/icons'
 import { apiService } from '../services/api'
+import { useLoadSequence } from '../hooks/useLoadSequence'
 import { Publicador } from '../types'
 
 const errMsg = (e: unknown): string => {
@@ -222,6 +223,8 @@ const Publicadores: React.FC<PublicadoresProps> = ({ embedded = false }) => {
 	const [form, setForm] = useState<FormPub>(FORM_DEFAULT)
 	const [saving, setSaving] = useState(false)
 
+	const loadSeq = useLoadSequence()
+
 	const F = useCallback(
 		({ label, children }: { label: string; children: React.ReactNode }) => (
 			<div style={{ marginBottom: 12 }}>
@@ -239,9 +242,11 @@ const Publicadores: React.FC<PublicadoresProps> = ({ embedded = false }) => {
 
 	async function loadData(opts?: { silent?: boolean }) {
 		const silent = Boolean(opts?.silent)
+		const seq = loadSeq.next()
 		if (!silent) setLoading(true)
 		try {
 			const data = await apiService.get<Publicador[]>('/publicador')
+			if (!loadSeq.isCurrent(seq)) return
 			const list = Array.isArray(data) ? data : []
 			setPublicadores(
 				list.sort((a, b) =>
@@ -249,9 +254,9 @@ const Publicadores: React.FC<PublicadoresProps> = ({ embedded = false }) => {
 				),
 			)
 		} catch (e: unknown) {
-			setError(errMsg(e))
+			if (loadSeq.isCurrent(seq)) setError(errMsg(e))
 		} finally {
-			if (!silent) setLoading(false)
+			if (!silent && loadSeq.isCurrent(seq)) setLoading(false)
 		}
 	}
 

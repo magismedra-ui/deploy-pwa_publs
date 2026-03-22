@@ -9,6 +9,8 @@ export interface AddInfoPublPayload {
 	idpublicador: number
 	fecha?: string | null
 	observaciones?: string | null
+	/** Por defecto false */
+	pastoreo?: boolean
 }
 
 export interface AddInfoPubl extends AddInfoPublPayload {
@@ -80,6 +82,7 @@ export function useAddInfoPubl() {
 					idpublicador: payload.idpublicador ?? existing?.idpublicador ?? 0,
 					fecha: payload.fecha ?? existing?.fecha ?? null,
 					observaciones: payload.observaciones ?? existing?.observaciones ?? null,
+					pastoreo: payload.pastoreo ?? existing?.pastoreo ?? false,
 					_syncStatus: 'pending',
 				}
 				await saveLocally(STORE, [local])

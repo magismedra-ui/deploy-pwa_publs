@@ -110,6 +110,7 @@ CREATE TABLE addinfopubl (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   fecha DATE,
   observaciones VARCHAR(255),
+  pastoreo TINYINT(1) NOT NULL DEFAULT 0,
   idpublicador CHAR(36) NOT NULL,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   syncStatus ENUM('pending', 'synced', 'conflict') DEFAULT 'pending',

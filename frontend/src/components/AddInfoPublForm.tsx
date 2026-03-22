@@ -5,7 +5,7 @@ import { z } from 'zod'
 import {
 	IonItem, IonLabel, IonSelect, IonSelectOption,
 	IonDatetime, IonTextarea, IonButton, IonSpinner,
-	IonList, IonNote,
+	IonList, IonNote, IonToggle,
 } from '@ionic/react'
 import { usePublicadores } from '../hooks/usePublicadores'
 import type { AddInfoPublPayload } from '../hooks/useAddInfoPubl'
@@ -17,9 +17,15 @@ const schema = z.object({
 	idpublicador:  z.number({ message: 'Publicador requerido' }),
 	fecha:         z.string().optional().nullable(),
 	observaciones: z.string().optional().nullable(),
+	pastoreo:      z.boolean(),
 })
 
-type FormValues = z.infer<typeof schema>
+interface FormValues {
+	idpublicador: number
+	fecha?: string | null
+	observaciones?: string | null
+	pastoreo: boolean
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Props
@@ -51,11 +57,12 @@ export const AddInfoPublForm: React.FC<Props> = ({
 		reset,
 		formState: { errors },
 	} = useForm<FormValues>({
-		resolver: zodResolver(schema),
+		resolver: zodResolver(schema) as any,
 		defaultValues: {
 			idpublicador:  fixedPublicadorId,
 			fecha:         null,
 			observaciones: null,
+			pastoreo:      false,
 			...defaultValues,
 		},
 	})
@@ -66,6 +73,7 @@ export const AddInfoPublForm: React.FC<Props> = ({
 				idpublicador:  fixedPublicadorId ?? defaultValues.idpublicador,
 				fecha:         defaultValues.fecha ?? null,
 				observaciones: defaultValues.observaciones ?? null,
+				pastoreo:      defaultValues.pastoreo ?? false,
 			})
 		}
 	}, [defaultValues, fixedPublicadorId, reset])
@@ -75,6 +83,7 @@ export const AddInfoPublForm: React.FC<Props> = ({
 			idpublicador:  values.idpublicador,
 			fecha:         values.fecha ?? null,
 			observaciones: values.observaciones ?? null,
+			pastoreo:      values.pastoreo ?? false,
 		}
 		onSubmit(payload)
 	}
@@ -136,6 +145,23 @@ export const AddInfoPublForm: React.FC<Props> = ({
 								value={field.value ?? ''}
 								onIonChange={(e) => field.onChange(e.detail.value ?? null)}
 								placeholder="Información adicional del publicador..."
+							/>
+						)}
+					/>
+				</IonItem>
+
+				<IonItem>
+					<IonLabel>Pastoreo</IonLabel>
+					<Controller
+						name="pastoreo"
+						control={control}
+						render={({ field }) => (
+							<IonToggle
+								slot="end"
+								checked={field.value ?? false}
+								onIonChange={(e) =>
+									field.onChange(Boolean(e.detail.checked))
+								}
 							/>
 						)}
 					/>

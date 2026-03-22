@@ -11,6 +11,8 @@ export interface AddInfoPubl extends BaseEntity {
 	fecha: Date | string
 	observaciones?: string
 	idpublicador: string
+	/** Pastoreo; en API/DB por defecto false */
+	pastoreo?: boolean
 }
 
 export interface Asistencia extends BaseEntity {

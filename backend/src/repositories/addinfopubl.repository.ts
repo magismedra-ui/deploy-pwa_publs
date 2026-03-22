@@ -35,31 +35,46 @@ export class AddInfoPublRepository {
 		return result.rows as AddInfoPubl[]
 	}
 
-	async create(data: { idpublicador: string; fecha?: string | Date | null; observaciones?: string | null }): Promise<AddInfoPubl> {
+	async create(data: {
+		idpublicador: string
+		fecha?: string | Date | null
+		observaciones?: string | null
+		pastoreo?: boolean
+	}): Promise<AddInfoPubl> {
 		const id = generateUUID()
+		const pastoreo = data.pastoreo === true
 		const result = await pool.query(
-			`INSERT INTO addinfopubl (id, idpublicador, fecha, observaciones)
-			 VALUES ($1, $2, $3, $4)
+			`INSERT INTO addinfopubl (id, idpublicador, fecha, observaciones, pastoreo)
+			 VALUES ($1, $2, $3, $4, $5)
 			 RETURNING *`,
 			[
 				id,
 				data.idpublicador,
 				data.fecha ?? null,
 				data.observaciones ?? null,
+				pastoreo,
 			]
 		)
 		return result.rows[0] as AddInfoPubl
 	}
 
-	async update(id: string, data: { fecha?: string | Date | null; observaciones?: string | null }): Promise<AddInfoPubl | null> {
+	async update(
+		id: string,
+		data: {
+			fecha?: string | Date | null
+			observaciones?: string | null
+			pastoreo?: boolean
+		},
+	): Promise<AddInfoPubl | null> {
 		const result = await pool.query(
 			`UPDATE addinfopubl
-			 SET fecha = $1, observaciones = $2
-			 WHERE id = $3
+			 SET fecha = $1, observaciones = $2, pastoreo = $3
+			 WHERE id = $4
 			 RETURNING *`,
 			[
 				data.fecha ?? null,
 				data.observaciones ?? null,
+				data.pastoreo === true,
 				id,
 			]
 		)

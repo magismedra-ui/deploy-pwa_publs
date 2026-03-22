@@ -11,6 +11,8 @@ export interface AddInfoPubl extends BaseEntity {
 	fecha: Date | string
 	observaciones?: string
 	idpublicador: string
+	/** Por defecto false en API/Neon */
+	pastoreo?: boolean
 }
 
 export interface Asistencia extends BaseEntity {
