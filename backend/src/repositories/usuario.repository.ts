@@ -1,6 +1,17 @@
 import pool from '../config/database'
 import { Usuario } from '../types'
-import { generateUUID } from '../utils/uuid'
+
+function mapUsuarioRow(row: Record<string, unknown>): Usuario {
+	return {
+		id: row.id != null ? String(row.id) : undefined,
+		idrole: row.idrole != null ? String(row.idrole) : '',
+		idpublicador:
+			row.idpublicador != null ? String(row.idpublicador) : undefined,
+		email: String(row.email ?? ''),
+		password:
+			row.password !== undefined ? String(row.password) : '',
+	}
+}
 
 export class UsuarioRepository {
 	async findAll(): Promise<Usuario[]> {
@@ -9,7 +20,7 @@ export class UsuarioRepository {
 			 FROM usuario
 			 ORDER BY email`
 		)
-		return result.rows as Usuario[]
+		return result.rows.map((r) => mapUsuarioRow(r as Record<string, unknown>))
 	}
 
 	async findById(id: string): Promise<Usuario | null> {
@@ -19,7 +30,8 @@ export class UsuarioRepository {
 			 WHERE id = $1`,
 			[id]
 		)
-		return result.rows[0] || null
+		const row = result.rows[0]
+		return row ? mapUsuarioRow(row as Record<string, unknown>) : null
 	}
 
 	async findByEmail(email: string): Promise<Usuario | null> {
@@ -29,27 +41,28 @@ export class UsuarioRepository {
 			 WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))`,
 			[email]
 		)
-		return result.rows[0] || null
+		const row = result.rows[0]
+		return row ? mapUsuarioRow(row as Record<string, unknown>) : null
 	}
 
 	async create(data: Usuario): Promise<Usuario> {
-		const id = generateUUID()
 		const idpubRaw = data.idpublicador
 		const idpublicador =
 			idpubRaw != null && String(idpubRaw).trim() !== ''
 				? String(idpubRaw).trim()
 				: null
+		// id lo genera SERIAL / secuencia (PostgreSQL), no UUID — ver init-user.ts
 		const result = await pool.query(
-			`INSERT INTO usuario (id, idpublicador, idrole, email, password)
-			 VALUES ($1, $2, $3, $4, $5)
+			`INSERT INTO usuario (idpublicador, idrole, email, password)
+			 VALUES ($1, $2, $3, $4)
 			 RETURNING id, idpublicador, idrole, email`,
-			[id, idpublicador, data.idrole, data.email, data.password],
+			[idpublicador, data.idrole, data.email, data.password],
 		)
 		const row = result.rows[0]
 		if (!row) {
 			throw new Error('No se pudo crear el usuario')
 		}
-		return row as Usuario
+		return mapUsuarioRow(row as Record<string, unknown>)
 	}
 
 	async update(id: string, data: Partial<Usuario>): Promise<Usuario | null> {
