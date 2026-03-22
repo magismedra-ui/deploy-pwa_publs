@@ -32,7 +32,16 @@ const schema = z.object({
 	grupo:             z.number().optional().nullable(),
 	capitan:           z.boolean().optional(),
 	auxiliar:          z.boolean().optional(),
-	estado:            z.enum(['activo', 'inactivo']).optional(),
+	estado:            z
+		.enum([
+			'activo',
+			'inactivo',
+			'irregular',
+			'expulsado',
+			'desasociado',
+			'apostata',
+		])
+		.optional(),
 	observaciones:     z.string().optional(),
 })
 
@@ -294,6 +303,10 @@ export const PublicadorForm: React.FC<Props> = ({ id, onSubmit, onCancel, isSubm
 							>
 								<IonSelectOption value="activo">Activo</IonSelectOption>
 								<IonSelectOption value="inactivo">Inactivo</IonSelectOption>
+								<IonSelectOption value="irregular">Irregular</IonSelectOption>
+								<IonSelectOption value="expulsado">Expulsado</IonSelectOption>
+								<IonSelectOption value="desasociado">Desasociado</IonSelectOption>
+								<IonSelectOption value="apostata">Apóstata</IonSelectOption>
 							</IonSelect>
 						)}
 					/>

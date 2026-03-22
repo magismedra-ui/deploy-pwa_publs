@@ -81,7 +81,7 @@ const Dashboard: React.FC = () => {
 	// ── Render del tab activo ────────────────────────────────────────────
 	const renderContent = () => {
 		switch (activeTab) {
-			case 'publicadores': return <Publicadores />
+			case 'publicadores': return <Publicadores embedded />
 			case 'grupos':       return <Grupos />
 			case 'asistencias':  return <Asistencias />
 			case 'registros':    return <Registros />

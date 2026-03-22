@@ -8,14 +8,11 @@ import {
 	IonIcon,
 	IonButtons,
 	IonSpinner,
-	IonAlert,
 	IonLoading,
 	IonToast,
-	IonList,
-	IonItem,
-	IonLabel,
+	IonAlert,
 } from '@ionic/react'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { arrowBackOutline } from 'ionicons/icons'
 import { apiService } from '../services/api'
 import { Asistencia } from '../types'
@@ -24,9 +21,7 @@ const Asistencias: React.FC = () => {
 	const [asistencias, setAsistencias] = useState<Asistencia[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
-	const [showDeleteAlert, setShowDeleteAlert] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
-	const deleteIdRef = useRef<string | null>(null)
 
 	const [toast, setToast] = useState<{
 		show: boolean
@@ -80,6 +75,7 @@ const Asistencias: React.FC = () => {
 				color: 'success',
 			})
 		} catch (e: unknown) {
+			console.error('[Asistencias] handleDelete error:', e)
 			setToast({
 				show: true,
 				message: deleteErrorMessage(e),
@@ -90,15 +86,12 @@ const Asistencias: React.FC = () => {
 		}
 	}
 
-	const openDeleteAlert = (id: string) => {
-		deleteIdRef.current = id
-		setShowDeleteAlert(true)
-	}
-
-	// No limpiar deleteIdRef aquí: en Ionic `onDidDismiss` puede dispararse
-	// antes que el handler de "Eliminar" y borraba el id antes de borrar en BD.
-	const handleDismissDeleteAlert = () => {
-		setShowDeleteAlert(false)
+	const requestDelete = (id: string) => {
+		const ok = window.confirm(
+			'¿Seguro que deseas eliminar esta asistencia?',
+		)
+		if (!ok) return
+		void handleDelete(id)
 	}
 
 	return (
@@ -152,73 +145,45 @@ const Asistencias: React.FC = () => {
 					</div>
 				)}
 				{!loading && asistencias.length > 0 && (
-					<IonList
-						style={{ marginTop: 20, padding: '0 8px', background: 'transparent' }}
-					>
+					<div style={{ padding: '0 12px', marginTop: 20 }}>
 						{asistencias.map((a) => (
-							<IonItem
+							<div
 								key={String(a.id)}
-								lines="none"
-								detail={false}
 								style={{
-									'--background': 'var(--ion-item-background, #1e1e2e)',
-									'--inner-padding-end': '8px',
-									borderRadius: 10,
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'space-between',
+									gap: 12,
+									padding: '12px 16px',
 									marginBottom: 8,
+									borderRadius: 10,
+									background: 'var(--ion-item-background, #1e1e2e)',
 									boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-								} as React.CSSProperties}
+								}}
 							>
-								<IonLabel>
-									<h2 style={{ margin: 0, fontWeight: 600, fontSize: '0.92rem' }}>
+								<div style={{ flex: 1, minWidth: 0 }}>
+									<p style={{ margin: 0, fontWeight: 600, fontSize: '0.92rem' }}>
 										{new Date(a.fecha).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
-									</h2>
+									</p>
 									<p style={{ margin: '4px 0 0', fontSize: '0.78rem', opacity: 0.7 }}>
 										Presencial: {a.presencial ?? 0} · Zoom: {a.zoom ?? 0}
 									</p>
-								</IonLabel>
+								</div>
 								<IonButton
-									slot="end"
 									size="small"
 									color="danger"
 									fill="solid"
-									onClick={(ev) => {
-										ev.stopPropagation()
-										openDeleteAlert(String(a.id))
-									}}
+									style={{ flexShrink: 0 }}
+									onClick={() => requestDelete(String(a.id))}
 								>
 									Eliminar
 								</IonButton>
-							</IonItem>
+							</div>
 						))}
-					</IonList>
+					</div>
 				)}
 			</IonContent>
 
-			<IonAlert
-				isOpen={showDeleteAlert}
-				onDidDismiss={handleDismissDeleteAlert}
-				header="Eliminar"
-				message="¿Seguro que deseas eliminar esta asistencia?"
-				buttons={[
-					{
-						text: 'Cancelar',
-						role: 'cancel',
-						handler: () => {
-							deleteIdRef.current = null
-						},
-					},
-					{
-						text: 'Eliminar',
-						role: 'destructive',
-						handler: () => {
-							const id = deleteIdRef.current
-							deleteIdRef.current = null
-							setShowDeleteAlert(false)
-							if (id) void handleDelete(id)
-						},
-					},
-				]}
-			/>
 			<IonLoading isOpen={isDeleting} message="Eliminando..." />
 			<IonToast
 				isOpen={toast.show}

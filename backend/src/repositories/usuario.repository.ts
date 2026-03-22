@@ -50,19 +50,36 @@ export class UsuarioRepository {
 	}
 
 	async update(id: string, data: Partial<Usuario>): Promise<Usuario | null> {
-		const result = await pool.query(
-			`UPDATE usuario
-			 SET idpublicador=$1, idrole=$2, email=$3
-			 WHERE id=$4
-			 RETURNING id`,
-			[
-				data.idpublicador ?? null,
-				data.idrole ?? null,
-				data.email ?? null,
-				id,
-			]
-		)
-		if (result.rowCount === 0) return null
+		const existing = await this.findById(id)
+		if (!existing) return null
+
+		const idpublicador =
+			data.idpublicador !== undefined
+				? data.idpublicador
+				: existing.idpublicador
+		const idrole =
+			data.idrole !== undefined ? data.idrole : existing.idrole
+		const email = data.email !== undefined ? data.email : existing.email
+
+		if (data.password) {
+			const result = await pool.query(
+				`UPDATE usuario
+				 SET idpublicador=$1, idrole=$2, email=$3, password=$4
+				 WHERE id=$5
+				 RETURNING id`,
+				[idpublicador ?? null, idrole, email, data.password, id],
+			)
+			if (result.rowCount === 0) return null
+		} else {
+			const result = await pool.query(
+				`UPDATE usuario
+				 SET idpublicador=$1, idrole=$2, email=$3
+				 WHERE id=$4
+				 RETURNING id`,
+				[idpublicador ?? null, idrole, email, id],
+			)
+			if (result.rowCount === 0) return null
+		}
 		return this.findById(id)
 	}
 
