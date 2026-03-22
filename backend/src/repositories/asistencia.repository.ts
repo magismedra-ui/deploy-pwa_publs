@@ -16,7 +16,7 @@ export class AsistenciaRepository {
 			`SELECT id, fecha, presencial, zoom
 			 FROM asistencia
 			 WHERE id = $1`,
-			[id]
+			[asistenciaIdParam(id)]
 		)
 		return result.rows[0] || null
 	}
@@ -32,7 +32,7 @@ export class AsistenciaRepository {
 				data.zoom ?? null,
 			]
 		)
-		return this.findById(result.rows[0].id) as Promise<Asistencia>
+		return this.findById(String(result.rows[0].id)) as Promise<Asistencia>
 	}
 
 	async update(id: string, data: Partial<Asistencia>): Promise<Asistencia | null> {
@@ -45,7 +45,7 @@ export class AsistenciaRepository {
 				data.fecha ?? null,
 				data.presencial ?? null,
 				data.zoom ?? null,
-				id,
+				asistenciaIdParam(id),
 			]
 		)
 		if (result.rowCount === 0) return null
@@ -55,8 +55,15 @@ export class AsistenciaRepository {
 	async delete(id: string): Promise<boolean> {
 		const result = await pool.query(
 			`DELETE FROM asistencia WHERE id = $1`,
-			[id]
+			[asistenciaIdParam(id)]
 		)
 		return (result.rowCount ?? 0) > 0
 	}
+}
+
+/** Id numérico (SERIAL) o UUID en texto — evita desajustes con pg */
+function asistenciaIdParam(id: string): string | number {
+	const t = String(id).trim()
+	if (/^\d+$/.test(t)) return parseInt(t, 10)
+	return t
 }

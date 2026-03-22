@@ -1,7 +1,10 @@
 import { AsistenciaRepository } from '../repositories/asistencia.repository'
 import { Asistencia } from '../types'
-import { getCache, setCache, deleteCache, deleteCachePattern } from '../utils/cache'
 
+/**
+ * Sin caché Redis en listados: evita que GET /asistencia devuelva filas
+ * ya borradas (Redis KEYS/del a veces no invalida bien en producción).
+ */
 export class AsistenciaService {
 	private repository: AsistenciaRepository
 
@@ -10,51 +13,22 @@ export class AsistenciaService {
 	}
 
 	async findAll(): Promise<Asistencia[]> {
-		const cacheKey = 'asistencia:all'
-		const cached = await getCache<Asistencia[]>(cacheKey)
-
-		if (cached) {
-			return cached
-		}
-
-		const data = await this.repository.findAll()
-		await setCache(cacheKey, data)
-		return data
+		return this.repository.findAll()
 	}
 
 	async findById(id: string): Promise<Asistencia | null> {
-		const cacheKey = `asistencia:${id}`
-		const cached = await getCache<Asistencia>(cacheKey)
-
-		if (cached) {
-			return cached
-		}
-
-		const data = await this.repository.findById(id)
-		if (data) {
-			await setCache(cacheKey, data)
-		}
-		return data
+		return this.repository.findById(id)
 	}
 
 	async create(data: Asistencia): Promise<Asistencia> {
-		const result = await this.repository.create(data)
-		await deleteCache('asistencia:all')
-		await deleteCachePattern('asistencia:*')
-		return result
+		return this.repository.create(data)
 	}
 
 	async update(id: string, data: Partial<Asistencia>): Promise<Asistencia | null> {
-		const result = await this.repository.update(id, data)
-		await deleteCache('asistencia:all')
-		await deleteCachePattern('asistencia:*')
-		return result
+		return this.repository.update(id, data)
 	}
 
 	async delete(id: string): Promise<boolean> {
-		const result = await this.repository.delete(id)
-		await deleteCache('asistencia:all')
-		await deleteCachePattern('asistencia:*')
-		return result
+		return this.repository.delete(id)
 	}
 }

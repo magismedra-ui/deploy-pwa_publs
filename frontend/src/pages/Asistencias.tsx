@@ -70,6 +70,9 @@ const Asistencias: React.FC = () => {
 		setError(null)
 		try {
 			await apiService.delete(`/asistencia/${encodeURIComponent(id)}`)
+			setAsistencias((prev) =>
+				prev.filter((a) => String(a.id) !== String(id)),
+			)
 			await loadAsistencias({ silent: true })
 			setToast({
 				show: true,
