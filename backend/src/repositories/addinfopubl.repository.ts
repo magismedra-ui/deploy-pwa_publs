@@ -1,6 +1,25 @@
 import pool from '../config/database'
 import { AddInfoPubl } from '../types'
 
+/** ISO / datetime → YYYY-MM-DD para columna DATE en PostgreSQL */
+function fechaParaPg(
+	fecha: string | Date | null | undefined,
+): string | null {
+	if (fecha == null || fecha === '') return null
+	if (typeof fecha === 'string') {
+		const t = fecha.trim()
+		if (t.length >= 10) return t.slice(0, 10)
+		return t
+	}
+	try {
+		const d = fecha instanceof Date ? fecha : new Date(fecha)
+		if (Number.isNaN(d.getTime())) return null
+		return d.toISOString().slice(0, 10)
+	} catch {
+		return null
+	}
+}
+
 export interface AddInfoPublWithPublicador extends AddInfoPubl {
 	publicador_nombre?: string
 }
@@ -41,21 +60,46 @@ export class AddInfoPublRepository {
 		pastoreo?: boolean
 	}): Promise<AddInfoPubl> {
 		const pastoreo = data.pastoreo === true
-		// No enviar `id`: en Neon suele ser SERIAL o UUID con DEFAULT.
-		// Insertar UUID en columna INTEGER provocaba:
-		// invalid input syntax for type integer: "uuid..."
-		const result = await pool.query(
-			`INSERT INTO addinfopubl (idpublicador, fecha, observaciones, pastoreo)
-			 VALUES ($1, $2, $3, $4)
-			 RETURNING *`,
-			[
-				data.idpublicador,
-				data.fecha ?? null,
-				data.observaciones ?? null,
-				pastoreo,
-			]
+		const idpub = String(data.idpublicador).trim()
+		const fecha = fechaParaPg(data.fecha)
+		const obs = data.observaciones ?? null
+		const params = [idpub, fecha, obs, pastoreo]
+
+		const intentos: { sql: string; label: string }[] = [
+			{
+				label: 'id=gen_random_uuid + idpublicador::uuid',
+				sql: `INSERT INTO addinfopubl (id, idpublicador, fecha, observaciones, pastoreo)
+					VALUES (gen_random_uuid(), $1::uuid, $2::date, $3, $4)
+					RETURNING *`,
+			},
+			{
+				label: 'sin id + idpublicador::uuid (SERIAL o DEFAULT en id)',
+				sql: `INSERT INTO addinfopubl (idpublicador, fecha, observaciones, pastoreo)
+					VALUES ($1::uuid, $2::date, $3, $4)
+					RETURNING *`,
+			},
+			{
+				label: 'sin id ni casts (esquema ya alineado)',
+				sql: `INSERT INTO addinfopubl (idpublicador, fecha, observaciones, pastoreo)
+					VALUES ($1, $2, $3, $4)
+					RETURNING *`,
+			},
+		]
+
+		const errores: string[] = []
+		for (const { sql, label } of intentos) {
+			try {
+				const result = await pool.query(sql, params)
+				if (result.rows[0]) return result.rows[0] as AddInfoPubl
+			} catch (err: unknown) {
+				const msg = err instanceof Error ? err.message : String(err)
+				errores.push(`${label}: ${msg}`)
+			}
+		}
+
+		throw new Error(
+			`No se pudo insertar en addinfopubl. Ejecuta scripts/migrate-neon-addinfopubl-uuid.sql en Neon si idpublicador es INTEGER. Detalle: ${errores.join(' || ')}`,
 		)
-		return result.rows[0] as AddInfoPubl
 	}
 
 	async update(

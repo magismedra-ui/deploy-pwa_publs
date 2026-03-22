@@ -21,6 +21,8 @@ import {
 	IonToast,
 } from '@ionic/react'
 import React, { useCallback, useEffect, useState } from 'react'
+import axios from 'axios'
+import { useQueryClient } from '@tanstack/react-query'
 import { AddInfoPublForm } from '../components/AddInfoPublForm'
 import {
 	useAddInfoPubl,
@@ -128,6 +130,15 @@ function pastoreoEsTrue(row: AddInfoPublListRow): boolean {
 
 const ADD_INFO_TEXT: React.CSSProperties = { color: '#ffffff' }
 
+function mensajeErrorApi(err: unknown): string {
+	if (axios.isAxiosError(err)) {
+		const d = err.response?.data as { error?: { message?: string } } | undefined
+		return d?.error?.message || err.message || 'Error de red'
+	}
+	if (err instanceof Error) return err.message
+	return 'Error desconocido'
+}
+
 function filtrarAsistenciasMesActual(asistencias: Asistencia[]): Asistencia[] {
 	const ahora = new Date()
 	const mesActual = ahora.getMonth()
@@ -159,6 +170,7 @@ const Reports: React.FC = () => {
 		color: 'success' | 'danger'
 	}>({ show: false, message: '', color: 'success' })
 	const { create } = useAddInfoPubl()
+	const queryClient = useQueryClient()
 
 	const reloadAddInfoRows = useCallback(async () => {
 		try {
@@ -173,8 +185,9 @@ const Reports: React.FC = () => {
 						new Date(a.fecha as string).getTime(),
 				),
 			)
-		} catch {
-			setAddInfoRows([])
+		} catch (e) {
+			console.error('[Reportes] No se pudo recargar addinfopubl:', e)
+			// No vaciar la lista: el alta pudo ser OK y fallar solo el GET
 		}
 	}, [])
 
@@ -268,6 +281,7 @@ const Reports: React.FC = () => {
 	const handleSubmitNewAddInfo = async (data: AddInfoPublPayload) => {
 		try {
 			await create.mutateAsync(data)
+			await queryClient.invalidateQueries({ queryKey: ['addinfopubl'] })
 			setAddInfoNewToast({
 				show: true,
 				message: 'Registro guardado correctamente',
@@ -275,10 +289,10 @@ const Reports: React.FC = () => {
 			})
 			await reloadAddInfoRows()
 			setShowAddInfoNewModal(false)
-		} catch (err: any) {
+		} catch (err: unknown) {
 			setAddInfoNewToast({
 				show: true,
-				message: err?.message || 'Error al guardar',
+				message: mensajeErrorApi(err),
 				color: 'danger',
 			})
 		}
