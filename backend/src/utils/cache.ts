@@ -43,7 +43,9 @@ export const deleteCachePattern = async (pattern: string): Promise<void> => {
 		const client = await getRedisClient()
 		if (!client) return
 		const keys = await client.keys(pattern)
-		if (keys.length > 0) await client.del(keys)
+		if (keys.length > 0) {
+			await client.del(keys)
+		}
 	} catch {
 		// Sin Redis no hay nada que borrar
 	}

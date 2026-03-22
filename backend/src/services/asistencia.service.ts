@@ -1,6 +1,6 @@
 import { AsistenciaRepository } from '../repositories/asistencia.repository'
 import { Asistencia } from '../types'
-import { getCache, setCache, deleteCachePattern } from '../utils/cache'
+import { getCache, setCache, deleteCache, deleteCachePattern } from '../utils/cache'
 
 export class AsistenciaService {
 	private repository: AsistenciaRepository
@@ -39,18 +39,21 @@ export class AsistenciaService {
 
 	async create(data: Asistencia): Promise<Asistencia> {
 		const result = await this.repository.create(data)
+		await deleteCache('asistencia:all')
 		await deleteCachePattern('asistencia:*')
 		return result
 	}
 
 	async update(id: string, data: Partial<Asistencia>): Promise<Asistencia | null> {
 		const result = await this.repository.update(id, data)
+		await deleteCache('asistencia:all')
 		await deleteCachePattern('asistencia:*')
 		return result
 	}
 
 	async delete(id: string): Promise<boolean> {
 		const result = await this.repository.delete(id)
+		await deleteCache('asistencia:all')
 		await deleteCachePattern('asistencia:*')
 		return result
 	}

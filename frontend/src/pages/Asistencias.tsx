@@ -11,6 +11,9 @@ import {
 	IonAlert,
 	IonLoading,
 	IonToast,
+	IonList,
+	IonItem,
+	IonLabel,
 } from '@ionic/react'
 import React, { useState, useEffect, useRef } from 'react'
 import { arrowBackOutline } from 'ionicons/icons'
@@ -89,9 +92,10 @@ const Asistencias: React.FC = () => {
 		setShowDeleteAlert(true)
 	}
 
+	// No limpiar deleteIdRef aquí: en Ionic `onDidDismiss` puede dispararse
+	// antes que el handler de "Eliminar" y borraba el id antes de borrar en BD.
 	const handleDismissDeleteAlert = () => {
 		setShowDeleteAlert(false)
-		deleteIdRef.current = null
 	}
 
 	return (
@@ -145,48 +149,45 @@ const Asistencias: React.FC = () => {
 					</div>
 				)}
 				{!loading && asistencias.length > 0 && (
-					<div style={{ padding: '0 12px', marginTop: 20 }}>
+					<IonList
+						style={{ marginTop: 20, padding: '0 8px', background: 'transparent' }}
+					>
 						{asistencias.map((a) => (
-							<div
-								key={a.id}
+							<IonItem
+								key={String(a.id)}
+								lines="none"
+								detail={false}
 								style={{
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'space-between',
-									padding: '12px 16px',
-									marginBottom: 8,
+									'--background': 'var(--ion-item-background, #1e1e2e)',
+									'--inner-padding-end': '8px',
 									borderRadius: 10,
-									background: 'var(--ion-item-background, #1e1e2e)',
+									marginBottom: 8,
 									boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-								}}
+								} as React.CSSProperties}
 							>
-								<div>
-									<p style={{ margin: 0, fontWeight: 600, fontSize: '0.92rem' }}>
+								<IonLabel>
+									<h2 style={{ margin: 0, fontWeight: 600, fontSize: '0.92rem' }}>
 										{new Date(a.fecha).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
-									</p>
+									</h2>
 									<p style={{ margin: '4px 0 0', fontSize: '0.78rem', opacity: 0.7 }}>
 										Presencial: {a.presencial ?? 0} · Zoom: {a.zoom ?? 0}
 									</p>
-								</div>
-								<button
-									type="button"
-									onClick={() => openDeleteAlert(String(a.id))}
-									style={{
-										background: '#eb445a',
-										border: 'none',
-										borderRadius: 8,
-										cursor: 'pointer',
-										color: '#fff',
-										fontSize: '0.8rem',
-										padding: '6px 12px',
-										fontWeight: 600,
+								</IonLabel>
+								<IonButton
+									slot="end"
+									size="small"
+									color="danger"
+									fill="solid"
+									onClick={(ev) => {
+										ev.stopPropagation()
+										openDeleteAlert(String(a.id))
 									}}
 								>
 									Eliminar
-								</button>
-							</div>
+								</IonButton>
+							</IonItem>
 						))}
-					</div>
+					</IonList>
 				)}
 			</IonContent>
 
@@ -206,11 +207,11 @@ const Asistencias: React.FC = () => {
 					{
 						text: 'Eliminar',
 						role: 'destructive',
-						handler: async () => {
+						handler: () => {
 							const id = deleteIdRef.current
 							deleteIdRef.current = null
 							setShowDeleteAlert(false)
-							if (id) await handleDelete(id)
+							if (id) void handleDelete(id)
 						},
 					},
 				]}
