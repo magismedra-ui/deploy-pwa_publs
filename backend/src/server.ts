@@ -3,57 +3,48 @@ import { createApp } from './app'
 import pool from './config/database'
 import { getRedisClient } from './config/redis'
 
-const PORT = process.env.PORT || 3000
+const PORT = Number(process.env.PORT) || 3000
 
 const startServer = async () => {
+	const app = createApp()
+
+	// Abrir el puerto ANTES de PostgreSQL/Redis: Render hace un port scan;
+	// si la BD tarda o falla, igual hay un proceso escuchando en PORT.
+	app.listen(PORT, '0.0.0.0', () => {
+		console.log(`🚀 Servidor escuchando en 0.0.0.0:${PORT}`)
+	})
+
 	try {
-		// Verificar conexión a PostgreSQL (Neon)
 		await pool.query('SELECT 1')
 		console.log('✅ PostgreSQL (Neon) conectado')
-
-		// Redis es opcional — timeout de 4s para no bloquear el arranque
-		const redis = await Promise.race([
-			getRedisClient(),
-			new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-		])
-		if (redis) console.log('✅ Redis conectado')
-		else console.log('⚠️ Redis no disponible, ejecutando sin caché')
-
-		const app = createApp()
-
-		app.listen(Number(PORT), '0.0.0.0', () => {
-			console.log(`🚀 Servidor corriendo en 0.0.0.0:${PORT}`)
-		})
-
-		// ── Keep-alive: evita que Render duerma el servidor ──────────────
-		const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`
-		setInterval(async () => {
-			try {
-				await fetch(`${BACKEND_URL}/health`)
-				console.log('🔄 Keep-alive ping OK')
-			} catch (err) {
-				console.warn('⚠️ Keep-alive ping falló:', err)
-			}
-		}, 10 * 60 * 1000) // cada 10 minutos
-
 	} catch (error: unknown) {
-		console.error('❌ Error al iniciar servidor:', error)
-		const err = error as NodeJS.ErrnoException & { errors?: NodeJS.ErrnoException[] }
-		const firstErr = err.errors?.[0] ?? err
-		const isRefused =
-			firstErr.code === 'ECONNREFUSED' ||
-			String((error as Error).message).includes('ECONNREFUSED')
-		if (isRefused) {
-			console.error(
-				'\n💡 Posibles soluciones:\n' +
-					'  1. Crea backend/.env con DATABASE_URL (copia desde .env.example).\n' +
-					'  2. Si usas PostgreSQL local: inicia el servicio en el puerto 5432.\n' +
-					'  3. Si usas Neon: usa la URL que te da el panel (incluye ?sslmode=require).\n'
-			)
-		}
-		process.exit(1)
+		console.error('❌ PostgreSQL no disponible:', error)
+		console.error(
+			'💡 En Render: revisa DATABASE_URL (Neon) y ?sslmode=require. ' +
+				'El servidor sigue arriba para no bloquear el health check.',
+		)
 	}
+
+	const redis = await Promise.race([
+		getRedisClient(),
+		new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+	])
+	if (redis) console.log('✅ Redis conectado')
+	else console.log('⚠️ Redis no disponible, ejecutando sin caché')
+
+	// Keep-alive (misma instancia)
+	const localHealth = `http://127.0.0.1:${PORT}/health`
+	setInterval(async () => {
+		try {
+			await fetch(localHealth)
+			console.log('🔄 Keep-alive ping OK')
+		} catch (err) {
+			console.warn('⚠️ Keep-alive ping falló:', err)
+		}
+	}, 10 * 60 * 1000)
 }
 
-startServer()
-
+startServer().catch((error: unknown) => {
+	console.error('❌ Error al iniciar servidor:', error)
+	process.exit(1)
+})

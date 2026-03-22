@@ -14,8 +14,7 @@ services:
         sync: false          # URL del frontend, ej: https://frontend-publs.onrender.com
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
+      # PORT lo asigna Render automáticamente; no fijar 3000 aquí
       - key: REDIS_DISABLED
         value: true
     healthCheckPath: /health
