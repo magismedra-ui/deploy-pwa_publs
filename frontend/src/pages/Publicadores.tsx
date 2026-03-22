@@ -198,74 +198,75 @@ const Publicadores: React.FC = () => {
 						</IonFab>
 					</>
 				)}
-				<IonModal isOpen={showModal} onDidDismiss={() => setShowModal(false)}>
-					<IonHeader>
-						<IonToolbar>
-							<IonTitle>
-								{editingPublicador ? 'Editar' : 'Nuevo'} Publicador
-							</IonTitle>
-							<IonButton slot="end" onClick={() => setShowModal(false)}>
-								Cerrar
-							</IonButton>
-						</IonToolbar>
-					</IonHeader>
-					<IonContent>
-						<IonItem>
-							<IonInput
-								label="Nombre *"
-								labelPlacement="stacked"
-								value={formData.nombre || ''}
-								onIonInput={(e) =>
-									setFormData({ ...formData, nombre: e.detail.value as string })
-								}
-								placeholder="Nombre"
-								required
-							/>
-						</IonItem>
-						<IonItem>
-							<IonInput
-								type="email"
-								label="Email"
-								labelPlacement="stacked"
-								value={formData.correo || ''}
-								onIonInput={(e) =>
-									setFormData({ ...formData, correo: e.detail.value as string })
-								}
-								placeholder="Email"
-							/>
-						</IonItem>
-						<IonItem>
-							<IonSelect
-								label="Grupo"
-								labelPlacement="stacked"
-								value={formData.grupo}
-								onIonChange={(e) =>
-									setFormData({ ...formData, grupo: e.detail.value })
-								}
-							>
-								<IonSelectOption value={undefined}>Sin grupo</IonSelectOption>
-								{grupos.map((grupo) => (
-									<IonSelectOption key={grupo.id} value={grupo.id}>
-										{grupo.nroGrupo != null
-											? `Grupo ${grupo.nroGrupo} – ${grupo.nombre}`
-											: grupo.nombre}
-									</IonSelectOption>
-								))}
-							</IonSelect>
-						</IonItem>
-						<IonButton expand="block" onClick={handleSave} style={{ margin: '20px' }}>
-							Guardar
-						</IonButton>
-					</IonContent>
-				</IonModal>
-				<IonAlert
-					isOpen={Boolean(error)}
-					onDidDismiss={() => setError(null)}
-					header="Error"
-					message={error || ''}
-					buttons={['OK']}
-				/>
 			</IonContent>
+
+			<IonModal isOpen={showModal} onDidDismiss={() => setShowModal(false)}>
+				<IonHeader>
+					<IonToolbar>
+						<IonTitle>
+							{editingPublicador ? 'Editar' : 'Nuevo'} Publicador
+						</IonTitle>
+						<IonButton slot="end" onClick={() => setShowModal(false)}>
+							Cerrar
+						</IonButton>
+					</IonToolbar>
+				</IonHeader>
+				<IonContent>
+					<IonItem>
+						<IonInput
+							label="Nombre *"
+							labelPlacement="stacked"
+							value={formData.nombre || ''}
+							onIonInput={(e) =>
+								setFormData({ ...formData, nombre: e.detail.value as string })
+							}
+							placeholder="Nombre"
+							required
+						/>
+					</IonItem>
+					<IonItem>
+						<IonInput
+							type="email"
+							label="Email"
+							labelPlacement="stacked"
+							value={formData.correo || ''}
+							onIonInput={(e) =>
+								setFormData({ ...formData, correo: e.detail.value as string })
+							}
+							placeholder="Email"
+						/>
+					</IonItem>
+					<IonItem>
+						<IonSelect
+							label="Grupo"
+							labelPlacement="stacked"
+							value={formData.grupo}
+							onIonChange={(e) =>
+								setFormData({ ...formData, grupo: e.detail.value })
+							}
+						>
+							<IonSelectOption value={undefined}>Sin grupo</IonSelectOption>
+							{grupos.map((grupo) => (
+								<IonSelectOption key={grupo.id} value={grupo.id}>
+									{grupo.nroGrupo != null
+										? `Grupo ${grupo.nroGrupo} – ${grupo.nombre}`
+										: grupo.nombre}
+								</IonSelectOption>
+							))}
+						</IonSelect>
+					</IonItem>
+					<IonButton expand="block" onClick={handleSave} style={{ margin: '20px' }}>
+						Guardar
+					</IonButton>
+				</IonContent>
+			</IonModal>
+			<IonAlert
+				isOpen={Boolean(error)}
+				onDidDismiss={() => setError(null)}
+				header="Error"
+				message={error || ''}
+				buttons={[{ text: 'OK', role: 'cancel' }]}
+			/>
 		</IonPage>
 	)
 }

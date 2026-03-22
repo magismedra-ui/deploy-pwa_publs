@@ -218,7 +218,7 @@ const Registros: React.FC = () => {
 					onDidDismiss={() => setError(null)}
 					header="Error"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', role: 'cancel' }]}
 				/>
 			</IonContent>
 		</IonPage>

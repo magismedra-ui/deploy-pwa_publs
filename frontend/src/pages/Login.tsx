@@ -121,7 +121,7 @@ const Login: React.FC = () => {
 					onDidDismiss={() => setError(null)}
 					header="Error de Autenticación"
 					message={error || ''}
-					buttons={['OK']}
+					buttons={[{ text: 'OK', role: 'cancel' }]}
 				/>
 			</IonContent>
 		</IonPage>

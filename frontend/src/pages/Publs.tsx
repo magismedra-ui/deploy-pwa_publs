@@ -426,24 +426,20 @@ const Publs: React.FC = () => {
 				</IonModal>
 			</IonContent>
 
-			{Boolean(error) && (
-				<IonAlert
-					isOpen
-					onDidDismiss={() => setError(null)}
-					header="Error"
-					message={error || ''}
-					buttons={['OK']}
-				/>
-			)}
-			{Boolean(successMsg) && (
-				<IonAlert
-					isOpen
-					onDidDismiss={() => setSuccessMsg(null)}
-					header="✅ Actualizado"
-					message={successMsg || ''}
-					buttons={['OK']}
-				/>
-			)}
+			<IonAlert
+				isOpen={Boolean(error)}
+				onDidDismiss={() => setError(null)}
+				header="Error"
+				message={error || ''}
+				buttons={[{ text: 'OK', role: 'cancel' }]}
+			/>
+			<IonAlert
+				isOpen={Boolean(successMsg)}
+				onDidDismiss={() => setSuccessMsg(null)}
+				header="✅ Actualizado"
+				message={successMsg || ''}
+				buttons={[{ text: 'OK', role: 'cancel' }]}
+			/>
 		</IonPage>
 	)
 }

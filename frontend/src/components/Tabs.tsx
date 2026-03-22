@@ -7,6 +7,7 @@ import Publs from '../pages/Publs'
 import Settings from '../pages/Settings'
 import Grupos from '../pages/Grupos'
 import Publicadores from '../pages/Publicadores'
+import Usuarios from '../pages/Usuarios'
 import Asistencias from '../pages/Asistencias'
 import Registros from '../pages/Registros'
 import AddInfoPubl from '../pages/AddInfoPubl'
@@ -50,6 +51,9 @@ const Tabs: React.FC = () => {
 				</Route>
 				<Route exact path="/tabs/publicadores">
 					<Publicadores />
+				</Route>
+				<Route exact path="/tabs/usuarios">
+					<Usuarios />
 				</Route>
 				<Route exact path="/tabs/asistencias">
 					<Asistencias />

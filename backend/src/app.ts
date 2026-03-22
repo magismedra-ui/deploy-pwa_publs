@@ -35,6 +35,17 @@ export const createApp = (): Express => {
 	app.use(express.urlencoded({ extended: true }))
 	app.use(limiter)
 
+	// APIs JSON: no cachear en navegador/CDN (evita 304 sin cuerpo útil en el cliente)
+	app.use('/api', (_req, res, next) => {
+		res.setHeader(
+			'Cache-Control',
+			'no-store, no-cache, must-revalidate, private',
+		)
+		res.setHeader('Pragma', 'no-cache')
+		res.setHeader('Expires', '0')
+		next()
+	})
+
 	app.use('/api/v1/auth', authRoutes)
 	app.use('/api/v1/addinfopubl', addinfopublRoutes)
 	app.use('/api/v1/asistencia', asistenciaRoutes)

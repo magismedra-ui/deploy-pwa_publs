@@ -13,8 +13,11 @@ class ApiService {
 			baseURL: API_BASE_URL,
 			timeout: 30000,
 			headers: {
-				'Content-Type': 'application/json'
-			}
+				'Content-Type': 'application/json',
+				// Evita 304 Not Modified con cuerpo vacío (Axios no rellena data)
+				'Cache-Control': 'no-cache',
+				Pragma: 'no-cache',
+			},
 		})
 
 		this.client.interceptors.request.use(
@@ -46,7 +49,15 @@ class ApiService {
 	}
 
 	async get<T>(url: string): Promise<T> {
-		const { data } = await this.client.get<ApiResponse<T>>(url)
+		const { data } = await this.client.get<ApiResponse<T>>(url, {
+			// Rompe caché HTTP/CDN (p. ej. Render) que devolvía 304 sin JSON
+			params: { _t: Date.now() },
+		})
+		if (data == null || typeof data !== 'object') {
+			throw new Error(
+				'Respuesta vacía del servidor. Prueba a recargar la página.',
+			)
+		}
 		if (!data.success) {
 			throw new Error(data.error?.message || 'Error en la petición')
 		}
@@ -79,7 +90,10 @@ class ApiService {
 
 	async delete(url: string): Promise<void> {
 		const { data } = await this.client.delete<ApiResponse<void>>(url)
-		if (!data.success) {
+		if (data == null || typeof data !== 'object') {
+			return
+		}
+		if ('success' in data && data.success === false) {
 			throw new Error(data.error?.message || 'Error en la petición')
 		}
 	}
