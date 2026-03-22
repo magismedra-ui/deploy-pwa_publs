@@ -66,10 +66,19 @@ class ApiService {
 
 	async post<T>(url: string, payload?: any): Promise<T> {
 		const { data } = await this.client.post<ApiResponse<T>>(url, payload)
-		if (!data.success || !data.data) {
+		if (data == null || typeof data !== 'object') {
+			throw new Error(
+				'Respuesta vacía del servidor. Prueba a recargar la página.',
+			)
+		}
+		if (!data.success) {
 			throw new Error(data.error?.message || 'Error en la petición')
 		}
-		return data.data
+		// data.data puede ser null en teoría; el alta de usuario debe devolver fila
+		if (data.data === undefined) {
+			throw new Error(data.error?.message || 'Error en la petición')
+		}
+		return data.data as T
 	}
 
 	async put<T>(url: string, payload?: any): Promise<T> {

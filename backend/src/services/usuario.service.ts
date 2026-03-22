@@ -40,11 +40,36 @@ export class UsuarioService {
 	}
 
 	async create(data: Omit<Usuario, 'id'>): Promise<Usuario> {
-		const hashedPassword = await hashPassword(data.password)
+		const email = typeof data.email === 'string' ? data.email.trim() : ''
+		if (!email) {
+			const error: AppError = new Error('El correo es obligatorio')
+			error.statusCode = 400
+			throw error
+		}
+		if (!data.idrole) {
+			const error: AppError = new Error('El rol es obligatorio')
+			error.statusCode = 400
+			throw error
+		}
+		if (!data.password || String(data.password).length < 6) {
+			const error: AppError = new Error(
+				'La contraseña debe tener al menos 6 caracteres',
+			)
+			error.statusCode = 400
+			throw error
+		}
+		const hashedPassword = await hashPassword(String(data.password))
+		const idpubRaw = data.idpublicador
+		const idpublicador: string | null =
+			idpubRaw != null && String(idpubRaw).trim() !== ''
+				? String(idpubRaw).trim()
+				: null
 		const result = await this.repository.create({
-			...data,
-			password: hashedPassword
-		})
+			email,
+			idrole: String(data.idrole),
+			idpublicador,
+			password: hashedPassword,
+		} as Usuario)
 		await deleteCachePattern('usuario:*')
 		return result
 	}

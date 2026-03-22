@@ -34,19 +34,22 @@ export class UsuarioRepository {
 
 	async create(data: Usuario): Promise<Usuario> {
 		const id = generateUUID()
+		const idpubRaw = data.idpublicador
+		const idpublicador =
+			idpubRaw != null && String(idpubRaw).trim() !== ''
+				? String(idpubRaw).trim()
+				: null
 		const result = await pool.query(
 			`INSERT INTO usuario (id, idpublicador, idrole, email, password)
 			 VALUES ($1, $2, $3, $4, $5)
-			 RETURNING id`,
-			[
-				id,
-				data.idpublicador ?? null,
-				data.idrole,
-				data.email,
-				data.password,
-			]
+			 RETURNING id, idpublicador, idrole, email`,
+			[id, idpublicador, data.idrole, data.email, data.password],
 		)
-		return this.findById(result.rows[0].id) as Promise<Usuario>
+		const row = result.rows[0]
+		if (!row) {
+			throw new Error('No se pudo crear el usuario')
+		}
+		return row as Usuario
 	}
 
 	async update(id: string, data: Partial<Usuario>): Promise<Usuario | null> {
