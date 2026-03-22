@@ -2,8 +2,7 @@ import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react'
 import { IonReactRouter } from '@ionic/react-router'
 import { Redirect, Route } from 'react-router-dom'
 import { type ComponentType, type FC, type ReactNode, useEffect } from 'react'
-
-const Router = IonReactRouter as ComponentType<{ children?: ReactNode }>
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Capacitor } from '@capacitor/core'
 import { StatusBar, Style } from '@capacitor/status-bar'
 
@@ -28,6 +27,17 @@ import '@ionic/react/css/flex-utils.css'
 import '@ionic/react/css/display.css'
 import './theme.css'
 
+const Router = IonReactRouter as ComponentType<{ children?: ReactNode }>
+
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			retry: 1,
+			refetchOnWindowFocus: false,
+		},
+	},
+})
+
 setupIonicReact()
 
 const App: FC = () => {
@@ -49,30 +59,32 @@ const App: FC = () => {
 
 	return (
 		<IonApp>
-			<AuthProvider>
-				<Router>
-					<IonRouterOutlet>
-						<PublicRoute exact path="/login">
-							<Login />
-						</PublicRoute>
-						<ProtectedRoute
-							exact
-							path="/tabs/ingresar-informes/:grupoId/:grupoNombre"
-						>
-							<IngresarInformes />
-						</ProtectedRoute>
-						<ProtectedRoute path="/tabs">
-							<Tabs />
-						</ProtectedRoute>
-						<Route exact path="/">
-							<Redirect to="/tabs/home" />
-						</Route>
-						<Route>
-							<Redirect to="/tabs/home" />
-						</Route>
-					</IonRouterOutlet>
-				</Router>
-			</AuthProvider>
+			<QueryClientProvider client={queryClient}>
+				<AuthProvider>
+					<Router>
+						<IonRouterOutlet>
+							<PublicRoute exact path="/login">
+								<Login />
+							</PublicRoute>
+							<ProtectedRoute
+								exact
+								path="/tabs/ingresar-informes/:grupoId/:grupoNombre"
+							>
+								<IngresarInformes />
+							</ProtectedRoute>
+							<ProtectedRoute path="/tabs">
+								<Tabs />
+							</ProtectedRoute>
+							<Route exact path="/">
+								<Redirect to="/tabs/home" />
+							</Route>
+							<Route>
+								<Redirect to="/tabs/home" />
+							</Route>
+						</IonRouterOutlet>
+					</Router>
+				</AuthProvider>
+			</QueryClientProvider>
 		</IonApp>
 	)
 }

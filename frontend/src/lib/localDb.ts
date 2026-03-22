@@ -67,12 +67,13 @@ interface TJPublsDB extends DBSchema {
 		}
 	}
 	addinfopubl: {
-		key: number
+		key: string | number
 		value: {
-			id: number
-			idpublicador: number
+			id: string | number
+			idpublicador: string
 			fecha?: string | null
 			observaciones?: string | null
+			pastoreo?: boolean
 			_syncStatus?: 'pending' | 'synced'
 			_deleted?: boolean
 		}

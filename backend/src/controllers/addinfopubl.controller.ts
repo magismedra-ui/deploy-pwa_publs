@@ -39,7 +39,11 @@ export const getByPublicador = async (req: AuthRequest, res: Response, next: Nex
 
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
 	try {
-		const { idpublicador, fecha, observaciones, pastoreo } = req.body
+		const { fecha, observaciones, pastoreo } = req.body
+		const idpublicador =
+			req.body?.idpublicador !== undefined && req.body?.idpublicador !== null
+				? String(req.body.idpublicador).trim()
+				: ''
 
 		if (!idpublicador) {
 			const error: AppError = new Error('El campo idpublicador es requerido')
@@ -51,7 +55,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 			idpublicador,
 			fecha: fecha ?? null,
 			observaciones: observaciones ?? null,
-			pastoreo: pastoreo === true,
+			pastoreo: pastoreo === true || pastoreo === 1 || pastoreo === 'true',
 		})
 		res.status(201).json({ success: true, data })
 	} catch (error) {

@@ -182,3 +182,62 @@ ion-tab-button.tab-active {
 ion-tab-button.tab-selected:not(.tab-active) {
 	--color: #97B4FF !important;
 }
+
+/* AddInfoPubl: fecha en popover (tema oscuro, sin bloque blanco inline) */
+.addinfopubl-datetime-popover::part(content) {
+	background: #12122a;
+	border-radius: 12px;
+}
+
+.addinfopubl-ion-datetime {
+	--background: #12122a;
+	--title-color: #ffffff;
+	color: #ffffff;
+	font-size: 0.8rem;
+	max-width: 100%;
+}
+
+/* Calendario: fuentes más pequeñas (CSS Shadow Parts) */
+.addinfopubl-ion-datetime::part(month-year-button) {
+	font-size: 0.9rem;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.addinfopubl-ion-datetime::part(calendar-header) {
+	font-size: 0.75rem;
+}
+
+.addinfopubl-ion-datetime::part(calendar-days-of-week) {
+	font-size: 0.62rem;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+}
+
+.addinfopubl-ion-datetime::part(calendar-day) {
+	font-size: 0.72rem;
+	min-height: 28px;
+	font-weight: 500;
+}
+
+/* Día de hoy en verde (success / tab activo) */
+.addinfopubl-ion-datetime::part(calendar-day today) {
+	color: #2dd36f !important;
+	font-weight: 700;
+}
+
+.addinfopubl-ion-datetime::part(previous-button),
+.addinfopubl-ion-datetime::part(next-button) {
+	transform: scale(0.85);
+}
+
+.addinfopubl-fecha-btn {
+	--border-color: rgba(255, 255, 255, 0.45);
+	--color: #ffffff;
+	color: #ffffff;
+	margin-top: 6px;
+}
+
+.addinfopubl-fecha-item ion-label {
+	color: rgba(255, 255, 255, 0.95);
+}

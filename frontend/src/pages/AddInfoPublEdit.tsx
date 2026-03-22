@@ -34,7 +34,7 @@ const AddInfoPublEdit: React.FC = () => {
 				// Detectar offline ANTES de fetch
 				if (!navigator.onLine) {
 					const local = await getLocally('addinfopubl')
-					const found = local.find((a) => a.id === Number(id))
+					const found = local.find((a) => String(a.id) === String(id))
 					if (found) {
 						const { _syncStatus, _deleted, ...clean } = found as any
 						setDefaultValues(clean)
@@ -46,7 +46,7 @@ const AddInfoPublEdit: React.FC = () => {
 			} catch {
 				// Fallback a IndexedDB
 				const local = await getLocally('addinfopubl')
-				const found = local.find((a) => a.id === Number(id))
+				const found = local.find((a) => String(a.id) === String(id))
 				if (found) {
 					const { _syncStatus, _deleted, ...clean } = found as any
 					setDefaultValues(clean)
@@ -60,7 +60,7 @@ const AddInfoPublEdit: React.FC = () => {
 
 	const handleSubmit = async (data: AddInfoPublPayload) => {
 		try {
-			await update.mutateAsync({ id: Number(id), payload: data })
+			await update.mutateAsync({ id, payload: data })
 			setToast({ show: true, message: 'Registro actualizado correctamente', color: 'success' })
 			setTimeout(() => history.goBack(), 800)
 		} catch (err: any) {

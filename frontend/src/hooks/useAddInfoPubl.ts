@@ -6,7 +6,8 @@ import { getLocally, saveLocally, addToSyncQueue, omitLocalFields } from '../lib
 // Tipos
 // ─────────────────────────────────────────────────────────────────────────────
 export interface AddInfoPublPayload {
-	idpublicador: number
+	/** UUID del publicador (misma columna que en API / PostgreSQL) */
+	idpublicador: string
 	fecha?: string | null
 	observaciones?: string | null
 	/** Por defecto false */
@@ -14,7 +15,8 @@ export interface AddInfoPublPayload {
 }
 
 export interface AddInfoPubl extends AddInfoPublPayload {
-	id: number
+	/** UUID del registro; valores negativos solo en borrador offline */
+	id: string | number
 	_syncStatus?: 'pending' | 'synced'
 	_deleted?: boolean
 }
@@ -67,7 +69,7 @@ export function useAddInfoPubl() {
 	})
 
 	// ── Update ─────────────────────────────────────────────────────────────
-	const update = useMutation<AddInfoPubl, Error, { id: number; payload: Partial<AddInfoPublPayload> }>({
+	const update = useMutation<AddInfoPubl, Error, { id: string | number; payload: Partial<AddInfoPublPayload> }>({
 		mutationFn: async ({ id, payload }) => {
 			const cleanPayload = omitLocalFields(payload as Record<string, unknown>)
 			try {
@@ -79,7 +81,7 @@ export function useAddInfoPubl() {
 				const existing = (await getLocally(STORE) as AddInfoPubl[]).find((a) => a.id === id)
 				const local: AddInfoPubl = {
 					id,
-					idpublicador: payload.idpublicador ?? existing?.idpublicador ?? 0,
+					idpublicador: payload.idpublicador ?? existing?.idpublicador ?? '',
 					fecha: payload.fecha ?? existing?.fecha ?? null,
 					observaciones: payload.observaciones ?? existing?.observaciones ?? null,
 					pastoreo: payload.pastoreo ?? existing?.pastoreo ?? false,
@@ -98,7 +100,7 @@ export function useAddInfoPubl() {
 	})
 
 	// ── Delete ─────────────────────────────────────────────────────────────
-	const remove = useMutation<void, Error, number>({
+	const remove = useMutation<void, Error, string | number>({
 		mutationFn: async (id) => {
 			try {
 				await apiService.delete(`${ENDPOINT}/${id}`)

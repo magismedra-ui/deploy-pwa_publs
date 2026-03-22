@@ -16,14 +16,34 @@ import {
 	IonSpinner,
 	IonModal,
 	IonButtons,
+	IonFab,
+	IonFabButton,
+	IonToast,
 } from '@ionic/react'
-import React, { useEffect, useState } from 'react'
-import { statsChartOutline, createOutline, arrowBackOutline } from 'ionicons/icons'
+import React, { useCallback, useEffect, useState } from 'react'
+import { AddInfoPublForm } from '../components/AddInfoPublForm'
+import {
+	useAddInfoPubl,
+	type AddInfoPublPayload,
+} from '../hooks/useAddInfoPubl'
+import {
+	statsChartOutline,
+	createOutline,
+	arrowBackOutline,
+	add,
+	eyeOutline,
+	checkmarkCircle,
+	closeCircle,
+} from 'ionicons/icons'
 import { apiService } from '../services/api'
 import { getPublicadores } from '../services/publicador.service'
 import { getRegistros } from '../services/registro.service'
 import { getAsistencias } from '../services/asistencia.service'
-import { Publicador, Registro, Asistencia } from '../types'
+import { Publicador, Registro, Asistencia, AddInfoPubl } from '../types'
+
+interface AddInfoPublListRow extends AddInfoPubl {
+	publicador_nombre?: string
+}
 
 interface GrupoEstadoInforme {
 	grupoId: number
@@ -95,6 +115,19 @@ function formatFecha(fecha: string | Date): string {
 	return `${dia}/${mes}/${anno}`
 }
 
+function nombreAddInfoPubl(row: AddInfoPublListRow): string {
+	return row.publicador_nombre?.trim() || '—'
+}
+
+function pastoreoEsTrue(row: AddInfoPublListRow): boolean {
+	if (row.pastoreo === true) return true
+	if (row.pastoreo === false) return false
+	if (typeof row.pastoreo === 'number') return row.pastoreo !== 0
+	return Boolean(row.pastoreo)
+}
+
+const ADD_INFO_TEXT: React.CSSProperties = { color: '#ffffff' }
+
 function filtrarAsistenciasMesActual(asistencias: Asistencia[]): Asistencia[] {
 	const ahora = new Date()
 	const mesActual = ahora.getMonth()
@@ -110,24 +143,56 @@ const Reports: React.FC = () => {
 	const [error, setError] = useState<string | null>(null)
 	const [estado, setEstado] = useState<{ anno: number; mesNombre: string; gruposEstado: GrupoEstadoInforme[] } | null>(null)
 	const [asistencias, setAsistencias] = useState<Asistencia[]>([])
+	const [addInfoRows, setAddInfoRows] = useState<AddInfoPublListRow[]>([])
 	const [showAsistenciaEditModal, setShowAsistenciaEditModal] = useState(false)
 	const [editingAsistencia, setEditingAsistencia] = useState<Asistencia | null>(null)
 	const [asistenciaForm, setAsistenciaForm] = useState({ fecha: '', presencial: '', zoom: '' })
 	const [savingAsistencia, setSavingAsistencia] = useState(false)
 	const [asistenciaError, setAsistenciaError] = useState<string | null>(null)
+	const [showAddInfoDetailModal, setShowAddInfoDetailModal] = useState(false)
+	const [addInfoDetailRow, setAddInfoDetailRow] =
+		useState<AddInfoPublListRow | null>(null)
+	const [showAddInfoNewModal, setShowAddInfoNewModal] = useState(false)
+	const [addInfoNewToast, setAddInfoNewToast] = useState<{
+		show: boolean
+		message: string
+		color: 'success' | 'danger'
+	}>({ show: false, message: '', color: 'success' })
+	const { create } = useAddInfoPubl()
+
+	const reloadAddInfoRows = useCallback(async () => {
+		try {
+			const addInfoData = await apiService.get<AddInfoPublListRow[]>(
+				'/addinfopubl',
+			)
+			const listAdd = Array.isArray(addInfoData) ? addInfoData : []
+			setAddInfoRows(
+				listAdd.sort(
+					(a, b) =>
+						new Date(b.fecha as string).getTime() -
+						new Date(a.fecha as string).getTime(),
+				),
+			)
+		} catch {
+			setAddInfoRows([])
+		}
+	}, [])
 
 	useEffect(() => {
 		const load = async () => {
 			setLoading(true)
 			setError(null)
 			try {
-				const [publicadores, registros, asistenciasData] = await Promise.all([
-					getPublicadores(),
-					getRegistros(),
-					getAsistencias(),
-				])
+				const [publicadores, registros, asistenciasData] =
+					await Promise.all([
+						getPublicadores(),
+						getRegistros(),
+						getAsistencias(),
+					])
 				setEstado(buildEstadoInformes(publicadores, registros))
 				setAsistencias(asistenciasData)
+
+				await reloadAddInfoRows()
 			} catch (e: any) {
 				setError(e.message || 'Error al cargar estado de informes')
 			} finally {
@@ -135,7 +200,7 @@ const Reports: React.FC = () => {
 			}
 		}
 		load()
-	}, [])
+	}, [reloadAddInfoRows])
 
 	const openEditAsistenciaModal = (a: Asistencia) => {
 		setEditingAsistencia(a)
@@ -177,6 +242,45 @@ const Reports: React.FC = () => {
 			)
 		} finally {
 			setSavingAsistencia(false)
+		}
+	}
+
+	const openAddInfoDetailModal = (row: AddInfoPublListRow) => {
+		setAddInfoDetailRow(row)
+		;(document.activeElement as HTMLElement | null)?.blur()
+		setShowAddInfoDetailModal(true)
+	}
+
+	const closeAddInfoDetailModal = () => {
+		setShowAddInfoDetailModal(false)
+		setAddInfoDetailRow(null)
+	}
+
+	const handleFabNuevoAddInfoPubl = () => {
+		;(document.activeElement as HTMLElement | null)?.blur()
+		setShowAddInfoNewModal(true)
+	}
+
+	const closeAddInfoNewModal = () => {
+		setShowAddInfoNewModal(false)
+	}
+
+	const handleSubmitNewAddInfo = async (data: AddInfoPublPayload) => {
+		try {
+			await create.mutateAsync(data)
+			setAddInfoNewToast({
+				show: true,
+				message: 'Registro guardado correctamente',
+				color: 'success',
+			})
+			await reloadAddInfoRows()
+			setShowAddInfoNewModal(false)
+		} catch (err: any) {
+			setAddInfoNewToast({
+				show: true,
+				message: err?.message || 'Error al guardar',
+				color: 'danger',
+			})
 		}
 	}
 
@@ -278,7 +382,145 @@ const Reports: React.FC = () => {
 						)}
 					</IonCardContent>
 				</IonCard>
+
+				<IonCard>
+					<IonCardHeader>
+						<IonCardTitle style={{ fontSize: '1rem' }}>
+							<IonIcon icon={statsChartOutline} style={{ marginRight: 8 }} />
+							Listado de Info Publicadores
+						</IonCardTitle>
+						<IonCardSubtitle style={{ color: '#2dd36f', marginTop: 8 }}>
+							Guia de actividades de pastoreo
+						</IonCardSubtitle>
+					</IonCardHeader>
+					<IonCardContent>
+						{loading && (
+							<div className="ion-text-center ion-padding">
+								<IonSpinner name="crescent" />
+								<p>Cargando información de publicadores...</p>
+							</div>
+						)}
+						{!loading && addInfoRows.length === 0 && (
+							<p style={{ fontSize: '0.85rem', ...ADD_INFO_TEXT }}>
+								No hay registros de información adicional.
+							</p>
+						)}
+						{!loading &&
+							addInfoRows.map((row) => (
+								<IonItem
+									key={String(row.id)}
+									lines="full"
+									style={{
+										'--color': '#ffffff',
+										'--border-color': 'rgba(255,255,255,0.2)',
+									} as React.CSSProperties}
+								>
+									<IonLabel>
+										<h2 style={{ fontSize: '0.9rem', ...ADD_INFO_TEXT }}>
+											{formatFecha(row.fecha)}
+										</h2>
+										<p
+											style={{
+												fontSize: '0.85rem',
+												marginTop: 6,
+												...ADD_INFO_TEXT,
+											}}
+										>
+											{nombreAddInfoPubl(row)}
+										</p>
+										<div
+											style={{
+												display: 'flex',
+												alignItems: 'center',
+												gap: 8,
+												marginTop: 10,
+											}}
+										>
+											<span style={{ fontSize: '0.8rem', ...ADD_INFO_TEXT }}>
+												Pastoreo
+											</span>
+											<IonIcon
+												icon={
+													pastoreoEsTrue(row)
+														? checkmarkCircle
+														: closeCircle
+												}
+												style={{
+													fontSize: '1.35rem',
+													color: pastoreoEsTrue(row)
+														? '#2dd36f'
+														: 'rgba(255,255,255,0.6)',
+												}}
+												aria-hidden
+											/>
+										</div>
+									</IonLabel>
+									<IonButton
+										slot="end"
+										fill="clear"
+										aria-label="Ver detalle"
+										onClick={() => openAddInfoDetailModal(row)}
+									>
+										<IonIcon
+											icon={eyeOutline}
+											style={{ color: '#ffffff', fontSize: '1.5rem' }}
+										/>
+									</IonButton>
+								</IonItem>
+							))}
+					</IonCardContent>
+				</IonCard>
 			</IonContent>
+
+			<IonFab vertical="bottom" horizontal="end" slot="fixed">
+				<IonFabButton
+					onClick={handleFabNuevoAddInfoPubl}
+					aria-label="Nueva información de publicador"
+				>
+					<IonIcon icon={add} />
+				</IonFabButton>
+			</IonFab>
+
+			<IonModal
+				key={showAddInfoNewModal ? 'addinfo-new-open' : 'addinfo-new-closed'}
+				isOpen={showAddInfoNewModal}
+				onDidDismiss={closeAddInfoNewModal}
+			>
+				<IonHeader>
+					<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
+						<IonButtons slot="start">
+							<IonButton
+								onClick={closeAddInfoNewModal}
+								style={{ color: '#ffffff' }}
+							>
+								<IonIcon icon={arrowBackOutline} slot="icon-only" />
+							</IonButton>
+						</IonButtons>
+						<IonTitle style={{ color: '#ffffff', fontWeight: 700, fontSize: '1rem' }}>
+							NUEVA INFO PUBLICADOR
+						</IonTitle>
+					</IonToolbar>
+				</IonHeader>
+				<IonContent fullscreen className="ion-padding" style={{ '--background': '#1D68DF' } as any}>
+					<div style={{ background: '#041955', borderRadius: 12, padding: '16px' }}>
+						<AddInfoPublForm
+							onSubmit={handleSubmitNewAddInfo}
+							onCancel={closeAddInfoNewModal}
+							isSubmitting={create.isPending}
+						/>
+					</div>
+				</IonContent>
+			</IonModal>
+
+			<IonToast
+				isOpen={addInfoNewToast.show}
+				message={addInfoNewToast.message}
+				color={addInfoNewToast.color as any}
+				duration={2000}
+				onDidDismiss={() =>
+					setAddInfoNewToast((t) => ({ ...t, show: false }))
+				}
+			/>
 
 			<IonModal
 				key={showAsistenciaEditModal ? 'open' : 'closed'}
@@ -395,6 +637,79 @@ const Reports: React.FC = () => {
 							{savingAsistencia ? <IonSpinner name="crescent" /> : 'Guardar'}
 						</IonButton>
 					</div>
+				</IonContent>
+			</IonModal>
+
+			<IonModal
+				key={showAddInfoDetailModal ? 'addinfo-open' : 'addinfo-closed'}
+				isOpen={showAddInfoDetailModal}
+				onDidDismiss={closeAddInfoDetailModal}
+			>
+				<IonHeader>
+					<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
+						<IonButtons slot="start">
+							<IonButton
+								onClick={closeAddInfoDetailModal}
+								style={{ color: '#ffffff' }}
+							>
+								<IonIcon icon={arrowBackOutline} slot="icon-only" />
+							</IonButton>
+						</IonButtons>
+						<IonTitle style={{ color: '#ffffff', fontWeight: 700, fontSize: '1rem' }}>
+							INFO PUBLICADOR
+						</IonTitle>
+					</IonToolbar>
+				</IonHeader>
+				<IonContent className="ion-padding" style={{ '--background': '#1D68DF' } as any}>
+					{addInfoDetailRow && (
+						<div
+							style={{
+								background: '#041955',
+								borderRadius: 12,
+								padding: '16px',
+								color: '#ffffff',
+							}}
+						>
+							{[
+								{ k: 'Fecha', v: formatFecha(addInfoDetailRow.fecha) },
+								{
+									k: 'Publicador',
+									v: nombreAddInfoPubl(addInfoDetailRow),
+								},
+								{
+									k: 'ID publicador',
+									v: String(addInfoDetailRow.idpublicador ?? '—'),
+								},
+								{
+									k: 'Pastoreo',
+									v: pastoreoEsTrue(addInfoDetailRow) ? 'Sí' : 'No',
+								},
+								{
+									k: 'Observaciones',
+									v:
+										addInfoDetailRow.observaciones?.trim() ||
+										'—',
+								},
+								{
+									k: 'ID registro',
+									v: String(addInfoDetailRow.id ?? '—'),
+								},
+							].map(({ k, v }) => (
+								<div key={k} style={{ marginBottom: 14 }}>
+									<p
+										style={{
+											fontSize: '0.72rem',
+											color: 'rgba(255,255,255,0.6)',
+											marginBottom: 4,
+										}}
+									>
+										{k}
+									</p>
+									<p style={{ fontSize: '0.95rem', margin: 0 }}>{v}</p>
+								</div>
+							))}
+						</div>
+					)}
 				</IonContent>
 			</IonModal>
 		</IonPage>
