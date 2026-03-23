@@ -41,18 +41,6 @@ const Tabs: React.FC = () => {
 		'/tabs/publicadores',
 		'/tabs/settings',
 	]
-	const activePath = location.pathname
-	const tabSegment =
-		activePath.split('/tabs/')[1]?.split('/')[0]?.trim() || ''
-
-	const activeTab = (
-		tabSegment === 'home' ||
-		tabSegment === 'reports' ||
-		tabSegment === 'publs' ||
-		tabSegment === 'settings'
-	)
-		? tabSegment
-		: null
 
 	useEffect(() => {
 		if (!isAdmin && restrictedPaths.includes(location.pathname)) {
@@ -129,7 +117,6 @@ const Tabs: React.FC = () => {
 				<IonTabButton
 					tab="home"
 					href="/tabs/home"
-					className={activeTab === 'home' ? 'tab-active' : undefined}
 				>
 					<IonIcon icon={homeOutline} />
 					<IonLabel>Inicio</IonLabel>
@@ -137,7 +124,6 @@ const Tabs: React.FC = () => {
 				<IonTabButton
 					tab="reports"
 					href="/tabs/reports"
-					className={activeTab === 'reports' ? 'tab-active' : undefined}
 				>
 					<IonIcon icon={documentTextOutline} />
 					<IonLabel>Reportes</IonLabel>
@@ -145,7 +131,6 @@ const Tabs: React.FC = () => {
 				<IonTabButton
 					tab="publs"
 					href="/tabs/publs"
-					className={activeTab === 'publs' ? 'tab-active' : undefined}
 					onClick={handleBlockedTabAccess}
 				>
 					<IonIcon icon={peopleOutline} />
@@ -154,7 +139,6 @@ const Tabs: React.FC = () => {
 				<IonTabButton
 					tab="settings"
 					href="/tabs/settings"
-					className={activeTab === 'settings' ? 'tab-active' : undefined}
 					onClick={handleBlockedTabAccess}
 				>
 					<IonIcon icon={settingsOutline} />

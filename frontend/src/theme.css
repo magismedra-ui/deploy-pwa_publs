@@ -175,14 +175,6 @@ ion-tab-button {
 	--background-focused: transparent;
 }
 
-ion-tab-button.tab-active {
-	--color: #2dd36f !important;
-}
-
-ion-tab-button.tab-selected:not(.tab-active) {
-	--color: #97B4FF !important;
-}
-
 /* AddInfoPubl: fecha en popover (tema oscuro, sin bloque blanco inline) */
 .addinfopubl-datetime-popover::part(content) {
 	background: #12122a;
