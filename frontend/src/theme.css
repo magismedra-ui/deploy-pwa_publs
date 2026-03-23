@@ -203,6 +203,14 @@ ion-tab-button.tab-route-inactive ion-label {
 	color: #97B4FF !important;
 }
 
+.reports-page ion-card-title {
+	color: #ffffff !important;
+}
+
+.reports-page ion-card-title ion-icon {
+	color: #ffffff !important;
+}
+
 /* AddInfoPubl: fecha en popover (tema oscuro, sin bloque blanco inline) */
 .addinfopubl-datetime-popover::part(content) {
 	background: #12122a;

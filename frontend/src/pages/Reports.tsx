@@ -299,7 +299,7 @@ const Reports: React.FC = () => {
 	}
 
 	return (
-		<IonPage>
+		<IonPage className="reports-page">
 			<IonHeader>
 				<IonToolbar style={{ '--background': '#000000', '--color': '#ffffff' } as any}>
 					<IonTitle>Reportes</IonTitle>
