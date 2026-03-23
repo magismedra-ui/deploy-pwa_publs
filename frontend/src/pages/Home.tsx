@@ -127,14 +127,162 @@ export interface InfoRecienteInformes extends InfoRecienteBase {
 	gruposEstado: GrupoEstadoInforme[]
 }
 
+/** Info a la sucursal (último mes en tabla registro) */
+export interface InfoRecienteSucursal extends InfoRecienteBase {
+	id: 4
+	mesTitulo: string
+	n1: number
+	n2: number
+	n3: number
+	n4: number
+	n5: number
+	n6: number
+	n7: number
+	n8: number
+}
+
 export type InfoRecienteItem =
 	| InfoRecienteCongregacion
 	| InfoRecienteAsistencia
+	| InfoRecienteSucursal
 	| InfoRecienteInformes
 
 function normalizarPrecursor(val: string | undefined): string {
 	if (val == null || typeof val !== 'string') return ''
 	return val.trim().toUpperCase()
+}
+
+/** Registro de servicio: PUBLICADOR o PUBLICADOR NO BAUTIZADO */
+function esPrecursorPublicadorServicio(p: string | undefined): boolean {
+	const v = normalizarPrecursor(p)
+	return v === 'PUBLICADOR' || v === 'PUBLICADOR NO BAUTIZADO'
+}
+
+/** Precursor auxiliar: PA o texto completo en BD */
+function esPrecursorPAServicio(p: string | undefined): boolean {
+	const v = normalizarPrecursor(p)
+	return (
+		v === 'PA' ||
+		v === 'PRECURSOR AUXILIAR' ||
+		v === 'PRECURSORA AUXILIAR'
+	)
+}
+
+/** Precursor regular: PR o texto completo en BD */
+function esPrecursorPRServicio(p: string | undefined): boolean {
+	const v = normalizarPrecursor(p)
+	return (
+		v === 'PR' ||
+		v === 'PRECURSOR REGULAR' ||
+		v === 'PRECURSORA REGULAR'
+	)
+}
+
+/** Alinea el mes de la BD con MESES_ES (mayúsculas/minúsculas) */
+function mesNombreCanon(mes: string): string | null {
+	const t = mes.trim()
+	const idx = MESES_ES.findIndex(
+		(m) => m.toLowerCase() === t.toLowerCase(),
+	)
+	return idx >= 0 ? MESES_ES[idx] : null
+}
+
+/** Solo registros con predico verdadero (API puede enviar boolean o 1/0) */
+function registroPredicoSi(r: Registro): boolean {
+	if (r.predico === true) return true
+	if (r.predico === false) return false
+	if (typeof r.predico === 'number') return r.predico === 1
+	return false
+}
+
+function getUltimoMesRegistro(
+	registros: Registro[],
+): { mesNombre: string; anno: number } | null {
+	let best: { y: number; m: number; mesNombre: string } | null = null
+	for (const r of registros) {
+		if (r.mes == null || r.anno_servicio == null) continue
+		const canon = mesNombreCanon(String(r.mes))
+		if (!canon) continue
+		const anno = Number(r.anno_servicio)
+		if (isNaN(anno)) continue
+		const mi = MESES_ES.indexOf(canon)
+		if (mi < 0) continue
+		if (
+			!best ||
+			anno > best.y ||
+			(anno === best.y && mi > best.m)
+		) {
+			best = { y: anno, m: mi, mesNombre: canon }
+		}
+	}
+	return best ? { mesNombre: best.mesNombre, anno: best.y } : null
+}
+
+function buildInfoSucursal(
+	registros: Registro[],
+	fecha: string,
+): InfoRecienteSucursal {
+	const registrosConPredico = registros.filter((r) => registroPredicoSi(r))
+	const ultimo = getUltimoMesRegistro(registrosConPredico)
+	const colorSucursal = '#3dc2ff'
+
+	if (!ultimo) {
+		return {
+			id: 4,
+			note: 'Info a la sucursal mes: —',
+			fecha,
+			color: colorSucursal,
+			complete: true,
+			mesTitulo: '—',
+			n1: 0,
+			n2: 0,
+			n3: 0,
+			n4: 0,
+			n5: 0,
+			n6: 0,
+			n7: 0,
+			n8: 0,
+		}
+	}
+
+	const { mesNombre, anno } = ultimo
+	const delMes = registrosConPredico.filter((r) => {
+		const rAnno =
+			r.anno_servicio != null ? Number(r.anno_servicio) : null
+		const rMes = r.mes != null ? mesNombreCanon(String(r.mes)) : null
+		return rAnno === anno && rMes === mesNombre
+	})
+
+	const pub = delMes.filter((r) => esPrecursorPublicadorServicio(r.precursor))
+	const n1 = pub.length
+	const n2 = pub.reduce((s, r) => s + (Number(r.cursos) || 0), 0)
+
+	const pa = delMes.filter((r) => esPrecursorPAServicio(r.precursor))
+	const n3 = pa.length
+	const n4 = pa.reduce((s, r) => s + (Number(r.horas) || 0), 0)
+	const n5 = pa.reduce((s, r) => s + (Number(r.cursos) || 0), 0)
+
+	const pr = delMes.filter((r) => esPrecursorPRServicio(r.precursor))
+	const n6 = pr.length
+	const n7 = pr.reduce((s, r) => s + (Number(r.horas) || 0), 0)
+	const n8 = pr.reduce((s, r) => s + (Number(r.cursos) || 0), 0)
+
+	return {
+		id: 4,
+		note: `Info a la sucursal mes: ${mesNombre} ${anno}`,
+		fecha,
+		color: colorSucursal,
+		complete: true,
+		mesTitulo: `${mesNombre} ${anno}`,
+		n1,
+		n2,
+		n3,
+		n4,
+		n5,
+		n6,
+		n7,
+		n8,
+	}
 }
 
 function buildInfoCongregacion(
@@ -260,7 +408,8 @@ function buildInformacionReciente(
 	return [
 		buildInfoCongregacion(publicadores, fecha),
 		buildInfoAsistencia(asistencias, fecha),
-		buildInfoInformes(publicadores, registros, fecha)
+		buildInfoSucursal(registros, fecha),
+		buildInfoInformes(publicadores, registros, fecha),
 	]
 }
 
@@ -470,7 +619,11 @@ const Home: React.FC = () => {
 							</div>
 						) }
 						{ informacionReciente.filter((note) => note.id !== 3).map((note) => (
-							<IonRow key={ `note_${note.id}` } id={ `noteRow_${note.id}` }>
+							<IonRow
+								key={ `note_${note.id}` }
+								id={ `noteRow_${note.id}` }
+								className={note.id === 4 ? styles.infoSucursalCardWrap : undefined}
+							>
 								<IonCol size="12">
 									<IonItem>
 										<IonCheckbox
@@ -478,11 +631,14 @@ const Home: React.FC = () => {
 											checked={ note.complete }
 											disabled={ false }
 											style={{
-												['--border-color' as string]: note.color,
+												['--border-color' as string]:
+													note.id === 4 ? '#ffc409' : note.color,
 												['--checkbox-background' as string]: 'transparent',
-												['--checkbox-background-checked' as string]: note.color,
-												['--border-color-checked' as string]: note.color,
-												['--checkmark-color' as string]: '#ffffff'
+												['--checkbox-background-checked' as string]:
+													note.id === 4 ? '#ffc409' : note.color,
+												['--border-color-checked' as string]:
+													note.id === 4 ? '#ffc409' : note.color,
+												['--checkmark-color' as string]: '#ffffff',
 											}}
 											slot="start"
 										/>
@@ -506,6 +662,53 @@ const Home: React.FC = () => {
 													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Presencia:</span> { note.presencia }</p>
 													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Zoom:</span> { note.zoom }</p>
 													<p className={ styles.slideCountText } style={{ color: note.color, paddingLeft: '0.2rem', fontSize: '0.70rem' }}><span style={{ color: note.color }}>Total:</span> { note.total }</p>
+												</>
+											) }
+											{ note.id === 4 && (
+												<>
+													<p
+														className={ styles.slideCountText }
+														style={{
+															color: '#ffc409',
+															paddingLeft: '0.2rem',
+															fontSize: '0.70rem',
+														}}
+													>
+														<span style={{ color: '#ffc409' }}>Publicadores:</span>{' '}
+														{ note.n1 },{' '}
+														<span style={{ color: '#ffc409' }}>Cursos bíblicos:</span>{' '}
+														{ note.n2 }
+													</p>
+													<p
+														className={ styles.slideCountText }
+														style={{
+															color: '#ffc409',
+															paddingLeft: '0.2rem',
+															fontSize: '0.70rem',
+														}}
+													>
+														<span style={{ color: '#ffc409' }}>Precursores auxiliares:</span>{' '}
+														{ note.n3 },{' '}
+														<span style={{ color: '#ffc409' }}>Horas:</span>{' '}
+														{ note.n4 },{' '}
+														<span style={{ color: '#ffc409' }}>Cursos bíblicos:</span>{' '}
+														{ note.n5 }
+													</p>
+													<p
+														className={ styles.slideCountText }
+														style={{
+															color: '#ffc409',
+															paddingLeft: '0.2rem',
+															fontSize: '0.70rem',
+														}}
+													>
+														<span style={{ color: '#ffc409' }}>Precursores regulares:</span>{' '}
+														{ note.n6 },{' '}
+														<span style={{ color: '#ffc409' }}>Horas:</span>{' '}
+														{ note.n7 },{' '}
+														<span style={{ color: '#ffc409' }}>Cursos bíblicos:</span>{' '}
+														{ note.n8 }
+													</p>
 												</>
 											) }
 										</div>

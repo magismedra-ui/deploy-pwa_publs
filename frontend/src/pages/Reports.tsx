@@ -691,10 +691,6 @@ const Reports: React.FC = () => {
 									v: nombreAddInfoPubl(addInfoDetailRow),
 								},
 								{
-									k: 'ID publicador',
-									v: String(addInfoDetailRow.idpublicador ?? '—'),
-								},
-								{
 									k: 'Pastoreo',
 									v: pastoreoEsTrue(addInfoDetailRow) ? 'Sí' : 'No',
 								},
@@ -703,10 +699,6 @@ const Reports: React.FC = () => {
 									v:
 										addInfoDetailRow.observaciones?.trim() ||
 										'—',
-								},
-								{
-									k: 'ID registro',
-									v: String(addInfoDetailRow.id ?? '—'),
 								},
 							].map(({ k, v }) => (
 								<div key={k} style={{ marginBottom: 14 }}>
