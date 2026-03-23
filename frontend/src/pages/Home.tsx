@@ -308,8 +308,8 @@ const Home: React.FC = () => {
 		load()
 	}, [isAuthenticated])
 
-	const handleLogout = () => {
-		logout()
+	const handleLogout = async () => {
+		await logout()
 	}
 
 	const openAsistenciaModal = () => {

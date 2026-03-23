@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core'
 import { apiService } from './api'
 import { databaseService } from './database.service'
 import { registroRepository } from '../repositories/registro.repository'
+import { getLocally } from '../lib/localDb'
 import { Registro } from '../types'
 
 /**
@@ -16,6 +17,14 @@ export async function getRegistros(): Promise<Registro[]> {
 		return registroRepository.findAll()
 	}
 
-	const data = await apiService.get<Registro[]>('/registro')
-	return Array.isArray(data) ? data : []
+	try {
+		const data = await apiService.get<Registro[]>('/registro')
+		return Array.isArray(data) ? data : []
+	} catch (err) {
+		const offline =
+			typeof navigator !== 'undefined' && !navigator.onLine
+		if (!offline) throw err
+		const local = await getLocally('registros') as unknown as Registro[]
+		return Array.isArray(local) ? local : []
+	}
 }

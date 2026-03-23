@@ -20,6 +20,8 @@ import {
 	peopleCircleOutline,
 } from 'ionicons/icons'
 
+const WHITE_TEXT_STYLE: React.CSSProperties = { color: '#ffffff' }
+
 const Settings: React.FC = () => {
 	return (
 		<IonPage>
@@ -40,7 +42,9 @@ const Settings: React.FC = () => {
 			<IonContent fullscreen className="ion-padding">
 				<IonCard>
 					<IonCardHeader>
-						<IonCardTitle>Gestión de Publicadores</IonCardTitle>
+						<IonCardTitle style={WHITE_TEXT_STYLE}>
+							Gestión de Publicadores
+						</IonCardTitle>
 					</IonCardHeader>
 					<IonCardContent>
 						<IonItem
@@ -48,11 +52,23 @@ const Settings: React.FC = () => {
 							detail={false}
 							routerLink="/tabs/grupos"
 							routerDirection="forward"
+							style={
+								{
+									'--color': '#ffffff',
+									'--border-color': '#ffffff',
+								} as React.CSSProperties
+							}
 						>
-							<IonIcon icon={peopleOutline} slot="start" />
+							<IonIcon
+								icon={peopleOutline}
+								slot="start"
+								style={WHITE_TEXT_STYLE}
+							/>
 							<IonLabel>
-								<h2>Grupos</h2>
-								<p>Administrar grupos de publicadores</p>
+								<h2 style={WHITE_TEXT_STYLE}>Grupos</h2>
+								<p style={WHITE_TEXT_STYLE}>
+									Administrar grupos de publicadores
+								</p>
 							</IonLabel>
 						</IonItem>
 						<IonItem
@@ -60,11 +76,23 @@ const Settings: React.FC = () => {
 							detail={false}
 							routerLink="/tabs/publicadores"
 							routerDirection="forward"
+							style={
+								{
+									'--color': '#ffffff',
+									'--border-color': '#ffffff',
+								} as React.CSSProperties
+							}
 						>
-							<IonIcon icon={personOutline} slot="start" />
+							<IonIcon
+								icon={personOutline}
+								slot="start"
+								style={WHITE_TEXT_STYLE}
+							/>
 							<IonLabel>
-								<h2>Publicadores</h2>
-								<p>Gestionar información de publicadores</p>
+								<h2 style={WHITE_TEXT_STYLE}>Publicadores</h2>
+								<p style={WHITE_TEXT_STYLE}>
+									Gestionar información de publicadores
+								</p>
 							</IonLabel>
 						</IonItem>
 						<IonItem
@@ -72,11 +100,21 @@ const Settings: React.FC = () => {
 							detail={false}
 							routerLink="/tabs/usuarios"
 							routerDirection="forward"
+							style={
+								{
+									'--color': '#ffffff',
+									'--border-color': '#ffffff',
+								} as React.CSSProperties
+							}
 						>
-							<IonIcon icon={peopleCircleOutline} slot="start" />
+							<IonIcon
+								icon={peopleCircleOutline}
+								slot="start"
+								style={WHITE_TEXT_STYLE}
+							/>
 							<IonLabel>
-								<h2>Usuarios</h2>
-								<p>Gestionar usuarios</p>
+								<h2 style={WHITE_TEXT_STYLE}>Usuarios</h2>
+								<p style={WHITE_TEXT_STYLE}>Gestionar usuarios</p>
 							</IonLabel>
 						</IonItem>
 						<IonItem
@@ -84,11 +122,23 @@ const Settings: React.FC = () => {
 							detail={false}
 							routerLink="/tabs/registros"
 							routerDirection="forward"
+							style={
+								{
+									'--color': '#ffffff',
+									'--border-color': '#ffffff',
+								} as React.CSSProperties
+							}
 						>
-							<IonIcon icon={documentTextOutline} slot="start" />
+							<IonIcon
+								icon={documentTextOutline}
+								slot="start"
+								style={WHITE_TEXT_STYLE}
+							/>
 							<IonLabel>
-								<h2>Registros</h2>
-								<p>Ver y editar registros de servicio</p>
+								<h2 style={WHITE_TEXT_STYLE}>Registros</h2>
+								<p style={WHITE_TEXT_STYLE}>
+									Ver y editar registros de servicio
+								</p>
 							</IonLabel>
 						</IonItem>
 						<IonItem
@@ -96,11 +146,23 @@ const Settings: React.FC = () => {
 							detail={false}
 							routerLink="/tabs/addinfopubl"
 							routerDirection="forward"
+							style={
+								{
+									'--color': '#ffffff',
+									'--border-color': '#ffffff',
+								} as React.CSSProperties
+							}
 						>
-							<IonIcon icon={documentTextOutline} slot="start" />
+							<IonIcon
+								icon={documentTextOutline}
+								slot="start"
+								style={WHITE_TEXT_STYLE}
+							/>
 							<IonLabel>
-								<h2>Información Adicional</h2>
-								<p>Información adicional de publicadores</p>
+								<h2 style={WHITE_TEXT_STYLE}>Información Adicional</h2>
+								<p style={WHITE_TEXT_STYLE}>
+									Información adicional de publicadores
+								</p>
 							</IonLabel>
 						</IonItem>
 						<IonItem
@@ -108,11 +170,21 @@ const Settings: React.FC = () => {
 							detail={false}
 							routerLink="/tabs/asistencias"
 							routerDirection="forward"
+							style={
+								{
+									'--color': '#ffffff',
+									'--border-color': '#ffffff',
+								} as React.CSSProperties
+							}
 						>
-							<IonIcon icon={documentTextOutline} slot="start" />
+							<IonIcon
+								icon={documentTextOutline}
+								slot="start"
+								style={WHITE_TEXT_STYLE}
+							/>
 							<IonLabel>
-								<h2>Asistencias</h2>
-								<p>Gestionar asistencias</p>
+								<h2 style={WHITE_TEXT_STYLE}>Asistencias</h2>
+								<p style={WHITE_TEXT_STYLE}>Gestionar asistencias</p>
 							</IonLabel>
 						</IonItem>
 					</IonCardContent>

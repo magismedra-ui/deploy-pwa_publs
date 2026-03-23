@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { authService } from '../services/auth.service'
 import { AuthResponse, AuthUser } from '../types'
 
@@ -26,6 +27,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+	const queryClient = useQueryClient()
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 	const [user, setUser] = useState<AuthUser | null>(null)
 	const [loading, setLoading] = useState<boolean>(true)
@@ -43,6 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		} catch (error) {
 			setIsAuthenticated(false)
 			setUser(null)
+			queryClient.clear()
 		} finally {
 			setLoading(false)
 		}
@@ -58,11 +61,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 	const logout = async (): Promise<void> => {
 		await authService.logout()
+		queryClient.clear()
 		setIsAuthenticated(false)
 		setUser(null)
 		// Usar window.location para navegar cuando history no está disponible
 		if (typeof window !== 'undefined') {
-			window.location.href = '/login'
+			window.location.replace('/login')
 		}
 	}
 

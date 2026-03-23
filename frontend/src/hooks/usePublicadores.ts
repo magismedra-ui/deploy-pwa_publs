@@ -3,9 +3,6 @@ import { apiService } from '../services/api'
 import {
 	getLocally,
 	saveLocally,
-	addToSyncQueue,
-	getSyncQueue,
-	removeSyncQueueItem,
 	omitLocalFields,
 } from '../lib/localDb'
 
@@ -75,17 +72,8 @@ export function usePublicadores() {
 	// ── Create ─────────────────────────────────────────────────────────────
 	const create = useMutation<Publicador, Error, PublicadorPayload>({
 		mutationFn: async (payload) => {
-			try {
-				const created = await apiService.post<Publicador>(ENDPOINT, payload)
-				return { ...created, _syncStatus: 'synced' as const }
-			} catch {
-				// Offline: crear con ID negativo temporal
-				const tempId = -Date.now()
-				const local: Publicador = { ...payload, id: tempId, _syncStatus: 'pending' }
-				await saveLocally(STORE, [local])
-				await addToSyncQueue('create', 'publicador', payload as unknown as Record<string, unknown>)
-				return local
-			}
+			const created = await apiService.post<Publicador>(ENDPOINT, payload)
+			return { ...created, _syncStatus: 'synced' as const }
 		},
 		onSuccess: (data) => {
 			queryClient.setQueryData<Publicador[]>(QUERY_KEY, (old = []) => [...old, data])
@@ -97,40 +85,13 @@ export function usePublicadores() {
 		mutationFn: async ({ id, payload }) => {
 			// Limpiar campos _ antes de enviar al backend
 			const cleanPayload = omitLocalFields(payload as Record<string, unknown>)
-
-			try {
-				const updated = await apiService.put<Publicador>(`${ENDPOINT}/${id}`, cleanPayload)
-				const result = { ...updated, _syncStatus: 'synced' as const }
-				await saveLocally(STORE, [result])
-				return result
-			} catch {
-				// Offline: actualizar localmente
-				const existing = (await getLocally(STORE) as Publicador[]).find((p) => p.id === id)
-				const local: Publicador = {
-					id,
-					nombre: payload.nombre ?? existing?.nombre ?? '',
-					correo: payload.correo ?? existing?.correo ?? null,
-					sexo: payload.sexo ?? existing?.sexo ?? null,
-					esperanza: payload.esperanza ?? existing?.esperanza ?? null,
-					privilegio: payload.privilegio ?? existing?.privilegio ?? null,
-					precursor: payload.precursor ?? existing?.precursor ?? null,
-					fecha_nacimiento: payload.fecha_nacimiento ?? existing?.fecha_nacimiento ?? null,
-					fecha_bautismo: payload.fecha_bautismo ?? existing?.fecha_bautismo ?? null,
-					direccion: payload.direccion ?? existing?.direccion ?? null,
-					telefono_familiar: payload.telefono_familiar ?? existing?.telefono_familiar ?? null,
-					telefono: payload.telefono ?? existing?.telefono ?? null,
-					grupo: payload.grupo ?? existing?.grupo ?? null,
-					capitan: payload.capitan ?? existing?.capitan ?? null,
-					auxiliar: payload.auxiliar ?? existing?.auxiliar ?? null,
-					estado: payload.estado ?? existing?.estado ?? null,
-					observaciones: payload.observaciones ?? existing?.observaciones ?? null,
-					created_at: existing?.created_at ?? null,
-					_syncStatus: 'pending',
-				}
-				await saveLocally(STORE, [local])
-				await addToSyncQueue('update', 'publicador', { id, ...cleanPayload })
-				return local
-			}
+			const updated = await apiService.put<Publicador>(
+				`${ENDPOINT}/${id}`,
+				cleanPayload,
+			)
+			const result = { ...updated, _syncStatus: 'synced' as const }
+			await saveLocally(STORE, [result])
+			return result
 		},
 		onSuccess: (data) => {
 			queryClient.setQueryData<Publicador[]>(QUERY_KEY, (old = []) =>
@@ -142,16 +103,7 @@ export function usePublicadores() {
 	// ── Delete ─────────────────────────────────────────────────────────────
 	const remove = useMutation<void, Error, number>({
 		mutationFn: async (id) => {
-			try {
-				await apiService.delete(`${ENDPOINT}/${id}`)
-			} catch {
-				// Offline: marcar como eliminado localmente
-				const existing = (await getLocally(STORE) as Publicador[]).find((p) => p.id === id)
-				if (existing) {
-					await saveLocally(STORE, [{ ...existing, _deleted: true, _syncStatus: 'pending' }])
-				}
-				await addToSyncQueue('delete', 'publicador', { id })
-			}
+			await apiService.delete(`${ENDPOINT}/${id}`)
 		},
 		onSuccess: (_data, id) => {
 			queryClient.setQueryData<Publicador[]>(QUERY_KEY, (old = []) =>
@@ -169,31 +121,5 @@ export function usePublicadores() {
 		create,
 		update,
 		remove,
-		syncOfflineQueue,
-	}
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// syncOfflineQueue — procesa la cola de operaciones pendientes
-// ─────────────────────────────────────────────────────────────────────────────
-export async function syncOfflineQueue(): Promise<void> {
-	const queue = await getSyncQueue()
-	for (const item of queue) {
-		try {
-			const { action, entity, data } = item
-			const endpoint = `/${entity}`
-			if (action === 'create') {
-				await apiService.post(endpoint, data)
-			} else if (action === 'update') {
-				const { id, ...rest } = data as { id: number; [key: string]: unknown }
-				await apiService.put(`${endpoint}/${id}`, rest)
-			} else if (action === 'delete') {
-				const { id } = data as { id: number }
-				await apiService.delete(`${endpoint}/${id}`)
-			}
-			await removeSyncQueueItem(item.id!)
-		} catch (err) {
-			console.warn(`Error sincronizando item ${item.id}:`, err)
-		}
 	}
 }

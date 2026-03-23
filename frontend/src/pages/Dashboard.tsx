@@ -8,7 +8,6 @@ import { add, logOutOutline } from 'ionicons/icons'
 import { useHistory } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
-import { syncOfflineQueue } from '../hooks/usePublicadores'
 
 // ── Listas de cada entidad ────────────────────────────────────────────────
 import Publicadores from './Publicadores'
@@ -64,7 +63,6 @@ const Dashboard: React.FC = () => {
 	// ── Sync — UN SOLO listener (patrón boilerplate) ─────────────────────
 	useEffect(() => {
 		const handleOnline = async () => {
-			await syncOfflineQueue()
 			// Invalidar todas las queries para refrescar datos
 			await queryClient.invalidateQueries()
 		}

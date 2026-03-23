@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core'
 import { apiService } from './api'
 import { databaseService } from './database.service'
 import { asistenciaRepository } from '../repositories/asistencia.repository'
+import { getLocally } from '../lib/localDb'
 import { Asistencia } from '../types'
 
 /**
@@ -16,6 +17,14 @@ export async function getAsistencias(): Promise<Asistencia[]> {
 		return asistenciaRepository.findAll()
 	}
 
-	const data = await apiService.get<Asistencia[]>('/asistencia')
-	return Array.isArray(data) ? data : []
+	try {
+		const data = await apiService.get<Asistencia[]>('/asistencia')
+		return Array.isArray(data) ? data : []
+	} catch (err) {
+		const offline =
+			typeof navigator !== 'undefined' && !navigator.onLine
+		if (!offline) throw err
+		const local = await getLocally('asistencias') as unknown as Asistencia[]
+		return Array.isArray(local) ? local : []
+	}
 }

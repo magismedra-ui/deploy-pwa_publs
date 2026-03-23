@@ -8,6 +8,14 @@ const API_BASE_URL =
 class ApiService {
 	private client: AxiosInstance
 
+	private ensureOnlineForWrite(): void {
+		if (typeof navigator !== 'undefined' && !navigator.onLine) {
+			throw new Error(
+				'Solo puedes guardar o actualizar datos con conexión a internet',
+			)
+		}
+	}
+
 	constructor() {
 		this.client = axios.create({
 			baseURL: API_BASE_URL,
@@ -65,6 +73,7 @@ class ApiService {
 	}
 
 	async post<T>(url: string, payload?: any): Promise<T> {
+		this.ensureOnlineForWrite()
 		const { data } = await this.client.post<ApiResponse<T>>(url, payload)
 		if (data == null || typeof data !== 'object') {
 			throw new Error(
@@ -82,6 +91,7 @@ class ApiService {
 	}
 
 	async put<T>(url: string, payload?: any): Promise<T> {
+		this.ensureOnlineForWrite()
 		const { data } = await this.client.put<ApiResponse<T>>(url, payload)
 		if (!data.success || !data.data) {
 			throw new Error(data.error?.message || 'Error en la petición')
@@ -90,6 +100,7 @@ class ApiService {
 	}
 
 	async patch<T>(url: string, payload?: any): Promise<T> {
+		this.ensureOnlineForWrite()
 		const { data } = await this.client.patch<ApiResponse<T>>(url, payload)
 		if (!data.success) {
 			throw new Error(data.error?.message || 'Error en la petición')
@@ -98,6 +109,7 @@ class ApiService {
 	}
 
 	async delete(url: string): Promise<void> {
+		this.ensureOnlineForWrite()
 		const { data } = await this.client.delete<ApiResponse<void>>(url)
 		if (data == null || typeof data !== 'object') {
 			return

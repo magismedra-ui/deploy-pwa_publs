@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core'
 import { apiService } from './api'
 import { databaseService } from './database.service'
 import { publicadorRepository } from '../repositories/publicador.repository'
+import { getLocally } from '../lib/localDb'
 import { Publicador } from '../types'
 
 /**
@@ -28,6 +29,14 @@ export async function getPublicadores(): Promise<Publicador[]> {
 		return publicadorRepository.findAll()
 	}
 
-	const data = await apiService.get<Publicador[]>('/publicador')
-	return Array.isArray(data) ? data : []
+	try {
+		const data = await apiService.get<Publicador[]>('/publicador')
+		return Array.isArray(data) ? data : []
+	} catch (err) {
+		const offline =
+			typeof navigator !== 'undefined' && !navigator.onLine
+		if (!offline) throw err
+		const local = await getLocally('publicadores') as Publicador[]
+		return Array.isArray(local) ? local : []
+	}
 }
