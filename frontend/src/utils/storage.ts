@@ -3,35 +3,71 @@ import { AuthUser } from '../types'
 
 const TOKEN_KEY = 'auth_token'
 const USER_KEY = 'user_data'
+let memoryToken: string | null = null
+let memoryUser: AuthUser | null = null
 
 export const storage = {
 	async setToken(token: string): Promise<void> {
-		await Preferences.set({ key: TOKEN_KEY, value: token })
+		memoryToken = token
+		try {
+			await Preferences.set({ key: TOKEN_KEY, value: token })
+		} catch {
+			// Fallback en memoria cuando el navegador bloquea datos del sitio.
+		}
 	},
 
 	async getToken(): Promise<string | null> {
-		const { value } = await Preferences.get({ key: TOKEN_KEY })
-		return value || null
+		try {
+			const { value } = await Preferences.get({ key: TOKEN_KEY })
+			return value || memoryToken
+		} catch {
+			return memoryToken
+		}
 	},
 
 	async removeToken(): Promise<void> {
-		await Preferences.remove({ key: TOKEN_KEY })
+		memoryToken = null
+		try {
+			await Preferences.remove({ key: TOKEN_KEY })
+		} catch {
+			// Sin almacenamiento persistente disponible.
+		}
 	},
 
 	async setUser(user: AuthUser): Promise<void> {
-		await Preferences.set({ key: USER_KEY, value: JSON.stringify(user) })
+		memoryUser = user
+		try {
+			await Preferences.set({ key: USER_KEY, value: JSON.stringify(user) })
+		} catch {
+			// Fallback en memoria cuando el navegador bloquea datos del sitio.
+		}
 	},
 
 	async getUser(): Promise<AuthUser | null> {
-		const { value } = await Preferences.get({ key: USER_KEY })
-		return value ? JSON.parse(value) : null
+		try {
+			const { value } = await Preferences.get({ key: USER_KEY })
+			return value ? JSON.parse(value) : memoryUser
+		} catch {
+			return memoryUser
+		}
 	},
 
 	async removeUser(): Promise<void> {
-		await Preferences.remove({ key: USER_KEY })
+		memoryUser = null
+		try {
+			await Preferences.remove({ key: USER_KEY })
+		} catch {
+			// Sin almacenamiento persistente disponible.
+		}
 	},
 
 	async clear(): Promise<void> {
-		await Preferences.clear()
+		memoryToken = null
+		memoryUser = null
+		try {
+			await Preferences.clear()
+		} catch {
+			// Sin almacenamiento persistente disponible.
+		}
 	}
 }
