@@ -175,6 +175,34 @@ ion-tab-button {
 	--background-focused: transparent;
 }
 
+ion-tab-button.tab-selected {
+	--color: #2dd36f !important;
+}
+
+ion-tab-button:not(.tab-selected) {
+	--color: #97B4FF !important;
+}
+
+ion-tab-button.tab-selected ion-icon,
+ion-tab-button.tab-selected ion-label {
+	color: #2dd36f !important;
+}
+
+ion-tab-button:not(.tab-selected) ion-icon,
+ion-tab-button:not(.tab-selected) ion-label {
+	color: #97B4FF !important;
+}
+
+ion-tab-button.tab-route-active ion-icon,
+ion-tab-button.tab-route-active ion-label {
+	color: #2dd36f !important;
+}
+
+ion-tab-button.tab-route-inactive ion-icon,
+ion-tab-button.tab-route-inactive ion-label {
+	color: #97B4FF !important;
+}
+
 /* AddInfoPubl: fecha en popover (tema oscuro, sin bloque blanco inline) */
 .addinfopubl-datetime-popover::part(content) {
 	background: #12122a;
