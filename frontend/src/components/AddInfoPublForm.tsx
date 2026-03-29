@@ -178,6 +178,10 @@ export const AddInfoPublForm: React.FC<Props> = ({
 							control={control}
 							render={({ field }) => (
 								<IonSelect
+									interface="alert"
+									interfaceOptions={{
+										cssClass: 'addinfopubl-publicador-select-overlay',
+									}}
 									value={field.value}
 									onIonChange={(e) =>
 										field.onChange(String(e.detail.value ?? ''))

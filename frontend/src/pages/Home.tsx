@@ -676,7 +676,7 @@ const Home: React.FC = () => {
 													>
 														<span style={{ color: '#ffc409' }}>Publicadores:</span>{' '}
 														{ note.n1 },{' '}
-														<span style={{ color: '#ffc409' }}>Cursos bíblicos:</span>{' '}
+														<span style={{ color: '#ffc409' }}>C. bíblicos:</span>{' '}
 														{ note.n2 }
 													</p>
 													<p
@@ -687,11 +687,11 @@ const Home: React.FC = () => {
 															fontSize: '0.70rem',
 														}}
 													>
-														<span style={{ color: '#ffc409' }}>Precursores auxiliares:</span>{' '}
+														<span style={{ color: '#ffc409' }}>P. A:</span>{' '}
 														{ note.n3 },{' '}
 														<span style={{ color: '#ffc409' }}>Horas:</span>{' '}
 														{ note.n4 },{' '}
-														<span style={{ color: '#ffc409' }}>Cursos bíblicos:</span>{' '}
+														<span style={{ color: '#ffc409' }}>C. bíblicos:</span>{' '}
 														{ note.n5 }
 													</p>
 													<p
@@ -702,11 +702,11 @@ const Home: React.FC = () => {
 															fontSize: '0.70rem',
 														}}
 													>
-														<span style={{ color: '#ffc409' }}>Precursores regulares:</span>{' '}
+														<span style={{ color: '#ffc409' }}>P. R:</span>{' '}
 														{ note.n6 },{' '}
 														<span style={{ color: '#ffc409' }}>Horas:</span>{' '}
 														{ note.n7 },{' '}
-														<span style={{ color: '#ffc409' }}>Cursos bíblicos:</span>{' '}
+														<span style={{ color: '#ffc409' }}>C. bíblicos:</span>{' '}
 														{ note.n8 }
 													</p>
 												</>

@@ -269,3 +269,27 @@ ion-tab-button.tab-route-inactive ion-label {
 .addinfopubl-fecha-item ion-label {
 	color: rgba(255, 255, 255, 0.95);
 }
+
+/* Select Publicador (modal alert): nombres legibles en fondo oscuro */
+ion-alert.addinfopubl-publicador-select-overlay {
+	--color: #ffffff;
+	--ion-text-color: #ffffff;
+}
+
+ion-alert.addinfopubl-publicador-select-overlay .alert-title,
+ion-alert.addinfopubl-publicador-select-overlay .alert-radio-label,
+ion-alert.addinfopubl-publicador-select-overlay .alert-button-inner,
+ion-alert.addinfopubl-publicador-select-overlay .alert-message {
+	color: #ffffff !important;
+}
+
+ion-alert.addinfopubl-publicador-select-overlay .alert-radio-icon {
+	border-color: rgba(255, 255, 255, 0.65);
+}
+
+/* Si el select usa popover (algunas plataformas) */
+ion-popover.addinfopubl-publicador-select-overlay ion-item,
+ion-popover.addinfopubl-publicador-select-overlay ion-label {
+	--color: #ffffff;
+	color: #ffffff !important;
+}

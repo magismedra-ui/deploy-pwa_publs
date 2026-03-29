@@ -124,10 +124,15 @@ class ApiService {
 	async put<T>(url: string, payload?: any): Promise<T> {
 		this.ensureOnlineForWrite()
 		const { data } = await this.client.put<ApiResponse<T>>(url, payload)
-		if (!data.success || !data.data) {
+		if (data == null || typeof data !== 'object') {
+			throw new Error(
+				'Respuesta vacía del servidor. Prueba a recargar la página.',
+			)
+		}
+		if (!data.success) {
 			throw new Error(data.error?.message || 'Error en la petición')
 		}
-		return data.data
+		return data.data as T
 	}
 
 	async patch<T>(url: string, payload?: any): Promise<T> {
@@ -141,7 +146,7 @@ class ApiService {
 
 	async delete(url: string): Promise<void> {
 		this.ensureOnlineForWrite()
-		const { data } = await this.client.delete<ApiResponse<void>>(url)
+		const { data } = await this.client.delete<ApiResponse<unknown>>(url)
 		if (data == null || typeof data !== 'object') {
 			return
 		}

@@ -8,7 +8,6 @@ import {
 	IonIcon,
 	IonFab,
 	IonFabButton,
-	IonModal,
 	IonInput,
 	IonSpinner,
 	IonToast,
@@ -19,9 +18,10 @@ import {
 	IonLabel,
 	IonTextarea,
 	IonToggle,
+	useIonAlert,
 } from '@ionic/react'
-import { useState, useEffect } from 'react'
-import { add, refreshOutline, arrowBackOutline } from 'ionicons/icons'
+import { useState, useEffect, useRef } from 'react'
+import { add, refreshOutline, arrowBackOutline, trashOutline } from 'ionicons/icons'
 import { apiService } from '../services/api'
 import { useLoadSequence } from '../hooks/useLoadSequence'
 import { AddInfoPubl, Publicador } from '../types'
@@ -59,6 +59,17 @@ function fechaInputValue(f: Date | string | undefined): string {
 	}
 }
 
+/** Id estable para API (evita filas sin id tras caché / formas raras del JSON). */
+function resolveAddInfoRowId(row: AddInfoRow | null | undefined): string {
+	if (row == null) return ''
+	const r = row as unknown as Record<string, unknown>
+	const raw = r.id ?? r.Id ?? r.ID
+	if (raw == null) return ''
+	const s = String(raw).trim()
+	if (s === '' || s === 'undefined' || s === 'null') return ''
+	return s
+}
+
 const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 	embedded = false,
 }) => {
@@ -77,6 +88,10 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 		message: string
 		color: 'success' | 'danger'
 	}>({ show: false, message: '', color: 'success' })
+	const [deleting, setDeleting] = useState(false)
+	const [presentDeleteAlert] = useIonAlert()
+	/** Id del registro al abrir “Actualizar”; no depender solo de `editing` al guardar. */
+	const persistEditIdRef = useRef<string>('')
 
 	const loadSeq = useLoadSequence()
 
@@ -90,7 +105,11 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 				apiService.get<Publicador[]>('/publicador'),
 			])
 			if (!loadSeq.isCurrent(seq)) return
-			const list = Array.isArray(infoRes) ? infoRes : []
+			const rawList = Array.isArray(infoRes) ? infoRes : []
+			const list = rawList.map((row) => {
+				const rid = resolveAddInfoRowId(row)
+				return rid ? { ...row, id: rid } : row
+			})
 			setItems(list)
 			setPublicadores(
 				Array.isArray(pubRes)
@@ -120,6 +139,7 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 	}, [])
 
 	const closeModal = () => {
+		persistEditIdRef.current = ''
 		setShowModal(false)
 		setEditing(null)
 		setIdpublicador('')
@@ -129,6 +149,7 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 	}
 
 	const handleActualizar = (row: AddInfoRow) => {
+		persistEditIdRef.current = resolveAddInfoRowId(row)
 		setEditing(row)
 		setIdpublicador(String(row.idpublicador ?? ''))
 		setFecha(fechaInputValue(row.fecha))
@@ -138,6 +159,7 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 	}
 
 	const handleNew = () => {
+		persistEditIdRef.current = ''
 		setEditing(null)
 		setIdpublicador('')
 		setFecha('')
@@ -159,9 +181,12 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 		}
 		setSaving(true)
 		try {
-			if (editing?.id != null) {
+			const recordId =
+				persistEditIdRef.current ||
+				(editing ? resolveAddInfoRowId(editing) : '')
+			if (recordId !== '') {
 				await apiService.put<AddInfoPubl>(
-					`/addinfopubl/${encodeURIComponent(String(editing.id))}`,
+					`/addinfopubl/${encodeURIComponent(recordId)}`,
 					{
 						fecha: fecha.trim() || null,
 						observaciones: observaciones.trim() || null,
@@ -204,6 +229,60 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 		publicadores.find((p) => String(p.id) === String(row.idpublicador))
 			?.nombre ||
 		'Publicador'
+
+	const runDeleteById = (id: string) => {
+		const clean = id.trim()
+		if (!clean) return
+		setDeleting(true)
+		void (async () => {
+			try {
+				await apiService.delete(
+					`/addinfopubl/${encodeURIComponent(clean)}`,
+				)
+				setToast({
+					show: true,
+					message: 'Registro eliminado',
+					color: 'success',
+				})
+				await loadData({ silent: true })
+			} catch (e: unknown) {
+				setToast({
+					show: true,
+					message: errMsg(e),
+					color: 'danger',
+				})
+			} finally {
+				setDeleting(false)
+			}
+		})()
+	}
+
+	const openDeleteConfirmation = (row: AddInfoRow) => {
+		const id = resolveAddInfoRowId(row)
+		if (!id) {
+			setToast({
+				show: true,
+				message:
+					'Este registro no tiene id válido. Recarga con conexión.',
+				color: 'danger',
+			})
+			return
+		}
+		void presentDeleteAlert({
+			header: 'Eliminar registro',
+			message: `¿Eliminar el registro de ${nombrePublicador(row)}? Esta acción no se puede deshacer.`,
+			buttons: [
+				{ text: 'Cancelar', role: 'cancel' },
+				{
+					text: 'Eliminar',
+					role: 'destructive',
+					handler: () => {
+						queueMicrotask(() => runDeleteById(id))
+					},
+				},
+			],
+		})
+	}
 
 	const listBody = (
 		<>
@@ -312,35 +391,72 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 									{rowPastoreo(row) ? 'Sí' : 'No'}
 								</p>
 							</div>
-							<button
-								type="button"
-								aria-label="Actualizar registro"
-								title="Actualizar"
-								onClick={(e) => {
-									e.preventDefault()
-									e.stopPropagation()
-									handleActualizar(row)
-								}}
+							<div
 								style={{
 									display: 'flex',
 									flexShrink: 0,
 									alignItems: 'center',
-									justifyContent: 'center',
-									width: 44,
-									height: 44,
-									border: 'none',
-									borderRadius: 10,
-									background:
-										'rgba(29, 104, 223, 0.35)',
-									color: 'var(--ion-color-primary, #3880ff)',
-									cursor: 'pointer',
+									gap: 8,
 								}}
 							>
-								<IonIcon
-									icon={refreshOutline}
-									style={{ fontSize: 22 }}
-								/>
-							</button>
+								<button
+									type="button"
+									aria-label="Actualizar registro"
+									title="Actualizar"
+									onClick={(e) => {
+										e.preventDefault()
+										e.stopPropagation()
+										handleActualizar(row)
+									}}
+									disabled={deleting}
+									style={{
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										width: 44,
+										height: 44,
+										border: 'none',
+										borderRadius: 10,
+										background:
+											'rgba(29, 104, 223, 0.35)',
+										color: 'var(--ion-color-primary, #3880ff)',
+										cursor: 'pointer',
+									}}
+								>
+									<IonIcon
+										icon={refreshOutline}
+										style={{ fontSize: 22 }}
+									/>
+								</button>
+								<button
+									type="button"
+									aria-label="Eliminar registro"
+									title="Eliminar"
+									onClick={(e) => {
+										e.preventDefault()
+										e.stopPropagation()
+										openDeleteConfirmation(row)
+									}}
+									disabled={deleting}
+									style={{
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										width: 44,
+										height: 44,
+										border: 'none',
+										borderRadius: 10,
+										background: 'rgba(235, 68, 90, 0.2)',
+										color: '#eb445a',
+										cursor: 'pointer',
+									}}
+								>
+									<IonIcon
+										icon={trashOutline}
+										style={{ fontSize: 22 }}
+									/>
+								</button>
+							</div>
 						</div>
 					))}
 				</div>
@@ -358,139 +474,166 @@ const AddInfoPublPage: React.FC<AddInfoPublPageProps> = ({
 		</>
 	)
 
-	const formModal = (
-		<IonModal
-			key={showModal ? 'open' : 'closed'}
-			isOpen={showModal}
-			onDidDismiss={closeModal}
-			backdropDismiss
-			className="addinfopubl-form-modal"
-		>
-			<IonPage>
-				<IonHeader>
-					<IonToolbar
-						style={
-							{
-								'--background': '#000000',
-								'--color': '#ffffff',
-							} as React.CSSProperties
-						}
-					>
-						<IonButtons slot="start">
-							<IonButton
-								type="button"
-								onClick={() => closeModal()}
-								style={{ color: '#ffffff' }}
-								aria-label="Cerrar"
-							>
-								<IonIcon icon={arrowBackOutline} slot="icon-only" />
-							</IonButton>
-						</IonButtons>
-						<IonTitle style={{ color: '#ffffff' }}>
-							{editing ? 'Actualizar información' : 'Nueva información'}
-						</IonTitle>
-					</IonToolbar>
-				</IonHeader>
-				<IonContent className="ion-padding">
-					{!editing ? (
-						<IonItem lines="full">
-							<IonSelect
-								label="Publicador *"
-								labelPlacement="stacked"
-								placeholder="Selecciona"
-								value={idpublicador || undefined}
-								onIonChange={(e) =>
-									setIdpublicador(String(e.detail.value ?? ''))
-								}
-							>
-								{publicadores.map((p) => (
-									<IonSelectOption
-										key={String(p.id)}
-										value={String(p.id)}
-									>
-										{p.nombre}
-									</IonSelectOption>
-								))}
-							</IonSelect>
-						</IonItem>
-					) : (
-						<IonItem lines="none">
-							<IonLabel>
-								<p style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-									Publicador
-								</p>
-								<p style={{ fontWeight: 600 }}>
-									{nombrePublicador(editing)}
-								</p>
-							</IonLabel>
-						</IonItem>
-					)}
-					<IonItem lines="full">
-						<IonInput
-							type="date"
-							label="Fecha"
-							labelPlacement="stacked"
-							value={fecha}
-							onIonInput={(e) =>
-								setFecha(String(e.detail.value ?? ''))
+	const formModal =
+		showModal ? (
+			<div
+				className="addinfopubl-form-overlay"
+				style={{
+					position: 'fixed',
+					inset: 0,
+					zIndex: 100000,
+					background: 'var(--ion-background-color, #121212)',
+				}}
+				role="presentation"
+				onClick={() => closeModal()}
+			>
+				<IonPage
+					style={{ pointerEvents: 'auto' }}
+					onClick={(e) => e.stopPropagation()}
+				>
+					<IonHeader>
+						<IonToolbar
+							style={
+								{
+									'--background': '#000000',
+									'--color': '#ffffff',
+								} as React.CSSProperties
 							}
-						/>
-					</IonItem>
-					<IonItem lines="none">
-						<IonTextarea
-							label="Observaciones"
-							labelPlacement="stacked"
-							value={observaciones}
-							onIonInput={(e) =>
-								setObservaciones(
-									String(e.detail.value ?? ''),
-								)
-							}
-							rows={4}
-							autoGrow
-						/>
-					</IonItem>
-					<IonItem lines="none">
-						<IonLabel>Pastoreo</IonLabel>
-						<IonToggle
-							slot="end"
-							checked={pastoreo}
-							onIonChange={(e) =>
-								setPastoreo(Boolean(e.detail.checked))
-							}
-						/>
-					</IonItem>
-					<IonButton
-						type="button"
-						expand="block"
-						style={{ marginTop: 20 }}
-						onClick={() => void handleSave()}
-						disabled={saving}
-					>
-						{saving ? (
-							<IonSpinner name="crescent" />
-						) : editing ? (
-							'Actualizar'
+						>
+							<IonButtons slot="start">
+								<IonButton
+									type="button"
+									onClick={() => closeModal()}
+									style={{ color: '#ffffff' }}
+									aria-label="Cerrar"
+								>
+									<IonIcon
+										icon={arrowBackOutline}
+										slot="icon-only"
+									/>
+								</IonButton>
+							</IonButtons>
+							<IonTitle style={{ color: '#ffffff' }}>
+								{editing
+									? 'Actualizar información'
+									: 'Nueva información'}
+							</IonTitle>
+						</IonToolbar>
+					</IonHeader>
+					<IonContent className="ion-padding">
+						{!editing ? (
+							<IonItem lines="full">
+								<IonSelect
+									interface="popover"
+									interfaceOptions={{
+										cssClass:
+											'addinfopubl-publicador-select-overlay',
+									}}
+									label="Publicador *"
+									labelPlacement="stacked"
+									placeholder="Selecciona"
+									value={idpublicador || undefined}
+									onIonChange={(e) =>
+										setIdpublicador(
+											String(e.detail.value ?? ''),
+										)
+									}
+								>
+									{publicadores.map((p) => (
+										<IonSelectOption
+											key={String(p.id)}
+											value={String(p.id)}
+										>
+											{p.nombre}
+										</IonSelectOption>
+									))}
+								</IonSelect>
+							</IonItem>
 						) : (
-							'Guardar'
+							<IonItem lines="none">
+								<IonLabel>
+									<p
+										style={{
+											fontSize: '0.75rem',
+											opacity: 0.7,
+										}}
+									>
+										Publicador
+									</p>
+									<p style={{ fontWeight: 600 }}>
+										{nombrePublicador(editing)}
+									</p>
+								</IonLabel>
+							</IonItem>
 						)}
-					</IonButton>
-				</IonContent>
-			</IonPage>
-		</IonModal>
-	)
+						<IonItem lines="full">
+							<IonInput
+								type="date"
+								label="Fecha"
+								labelPlacement="stacked"
+								value={fecha}
+								onIonInput={(e) =>
+									setFecha(String(e.detail.value ?? ''))
+								}
+							/>
+						</IonItem>
+						<IonItem lines="none">
+							<IonTextarea
+								label="Observaciones"
+								labelPlacement="stacked"
+								value={observaciones}
+								onIonInput={(e) =>
+									setObservaciones(
+										String(e.detail.value ?? ''),
+									)
+								}
+								rows={4}
+								autoGrow
+							/>
+						</IonItem>
+						<IonItem lines="none">
+							<IonLabel>Pastoreo</IonLabel>
+							<IonToggle
+								slot="end"
+								checked={pastoreo}
+								onIonChange={(e) =>
+									setPastoreo(Boolean(e.detail.checked))
+								}
+							/>
+						</IonItem>
+						<IonButton
+							type="button"
+							expand="block"
+							style={{ marginTop: 20 }}
+							onClick={() => void handleSave()}
+							disabled={saving}
+						>
+							{saving ? (
+								<IonSpinner name="crescent" />
+							) : editing ? (
+								'Actualizar'
+							) : (
+								'Guardar'
+							)}
+						</IonButton>
+					</IonContent>
+				</IonPage>
+			</div>
+		) : null
 
 	const overlays = (
-		<IonToast
-			isOpen={toast.show}
-			message={toast.message}
-			color={toast.color}
-			duration={2500}
-			position="bottom"
-			onDidDismiss={() =>
-				setToast((t) => ({ ...t, show: false }))
-			}
-		/>
+		<>
+			<IonToast
+				isOpen={toast.show}
+				message={toast.message}
+				color={toast.color}
+				duration={2500}
+				position="bottom"
+				onDidDismiss={() =>
+					setToast((t) => ({ ...t, show: false }))
+				}
+			/>
+		</>
 	)
 
 	if (embedded) {

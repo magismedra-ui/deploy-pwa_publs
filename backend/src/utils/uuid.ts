@@ -4,8 +4,13 @@ export const generateUUID = (): string => {
 	return randomUUID()
 }
 
+/**
+ * Formato 8-4-4-4-12 hexadecimal con guiones.
+ * No exige variante RFC estricta en el 4º grupo (evita rechazar UUID de MySQL u otros).
+ */
 export const isValidUUID = (uuid: string): boolean => {
-	const uuidRegex =
-		/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-	return uuidRegex.test(uuid)
+	const t = String(uuid).trim()
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+		t,
+	)
 }

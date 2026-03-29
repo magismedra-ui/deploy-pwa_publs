@@ -116,7 +116,7 @@ export class AddInfoPublRepository {
 			 WHERE id = $4
 			 RETURNING *`,
 			[
-				data.fecha ?? null,
+				fechaParaPg(data.fecha),
 				data.observaciones ?? null,
 				data.pastoreo === true,
 				id,
