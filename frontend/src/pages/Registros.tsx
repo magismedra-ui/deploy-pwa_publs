@@ -13,8 +13,9 @@ import {
 	IonAlert,
 	IonModal,
 	IonToggle,
+	IonSearchbar,
 } from '@ionic/react'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { arrowBackOutline } from 'ionicons/icons'
 import { apiService } from '../services/api'
 import { useLoadSequence } from '../hooks/useLoadSequence'
@@ -41,6 +42,8 @@ const FORM_DEFAULT: FormInforme = {
 	notas: '',
 }
 
+const REGISTROS_PAGE_SIZE = 10
+
 interface MetaRegistro {
 	idpublicador?: string | number
 	anno_servicio?: number
@@ -63,8 +66,55 @@ const Registros: React.FC = () => {
 		message: string
 		color: 'success' | 'danger'
 	}>({ show: false, message: '', color: 'success' })
+	const [listPage, setListPage] = useState(0)
+	const [buscadorPublicador, setBuscadorPublicador] = useState('')
+	const buscadorPrevRef = useRef(buscadorPublicador)
 
 	const loadSeq = useLoadSequence()
+
+	const filteredRegistros = useMemo(() => {
+		const q = buscadorPublicador.trim().toLowerCase()
+		if (!q) return registros
+		return registros.filter((r) => {
+			const id = String(r.idpublicador ?? '')
+			const p = publicadores.find((x) => String(x.id) === id)
+			const nombre = (p?.nombre ?? '').toLowerCase()
+			return nombre.includes(q)
+		})
+	}, [registros, publicadores, buscadorPublicador])
+
+	const totalListPages = useMemo(
+		() =>
+			filteredRegistros.length === 0
+				? 0
+				: Math.ceil(filteredRegistros.length / REGISTROS_PAGE_SIZE),
+		[filteredRegistros.length],
+	)
+
+	const safeListPage =
+		totalListPages === 0
+			? 0
+			: Math.min(listPage, Math.max(0, totalListPages - 1))
+
+	const paginatedRegistros = useMemo(() => {
+		const start = safeListPage * REGISTROS_PAGE_SIZE
+		return filteredRegistros.slice(start, start + REGISTROS_PAGE_SIZE)
+	}, [filteredRegistros, safeListPage])
+
+	useEffect(() => {
+		const busquedaCambio = buscadorPrevRef.current !== buscadorPublicador
+		buscadorPrevRef.current = buscadorPublicador
+
+		if (totalListPages === 0) {
+			setListPage(0)
+			return
+		}
+		const maxP = totalListPages - 1
+		setListPage((p) => {
+			if (busquedaCambio) return 0
+			return Math.min(p, maxP)
+		})
+	}, [totalListPages, buscadorPublicador])
 
 	const loadData = async (opts?: { silent?: boolean }) => {
 		const silent = Boolean(opts?.silent)
@@ -250,8 +300,61 @@ const Registros: React.FC = () => {
 					</div>
 				)}
 				{!loading && registros.length > 0 && (
-					<div style={{ padding: '0 12px', marginTop: 20 }}>
-						{registros.map((registro) => (
+					<div style={{ padding: '0 12px', marginTop: 12 }}>
+						<IonSearchbar
+							value={buscadorPublicador}
+							debounce={250}
+							placeholder="Buscar por publicador…"
+							showClearButton="focus"
+							style={
+								{
+									'--background': 'var(--ion-item-background, #1e1e2e)',
+									'--color': '#ffffff',
+									'--placeholder-color': 'rgba(255,255,255,0.45)',
+									'--icon-color': '#ffffff',
+									padding: '4px 0',
+								} as React.CSSProperties
+							}
+							onIonInput={(e) =>
+								setBuscadorPublicador(String(e.detail.value ?? ''))
+							}
+						/>
+						{filteredRegistros.length === 0 && (
+							<div
+								style={{
+									textAlign: 'center',
+									padding: '1.5rem 0.5rem',
+									color: 'var(--ion-color-medium)',
+									fontSize: '0.9rem',
+								}}
+							>
+								<p style={{ margin: 0 }}>
+									Ningún registro coincide con la búsqueda.
+								</p>
+							</div>
+						)}
+						{filteredRegistros.length > 0 && (
+							<>
+						<p
+							style={{
+								margin: '0 4px 12px',
+								fontSize: '0.8rem',
+								color: 'var(--ion-color-medium)',
+							}}
+						>
+							Mostrando{' '}
+							{safeListPage * REGISTROS_PAGE_SIZE + 1}–
+							{Math.min(
+								(safeListPage + 1) * REGISTROS_PAGE_SIZE,
+								filteredRegistros.length,
+							)}{' '}
+							de {filteredRegistros.length}
+							{buscadorPublicador.trim()
+								? ` (${registros.length} en total)`
+								: ''}{' '}
+							· Página {safeListPage + 1} de {totalListPages}
+						</p>
+						{paginatedRegistros.map((registro) => (
 							<div
 								key={String(registro.id)}
 								style={{
@@ -303,6 +406,45 @@ const Registros: React.FC = () => {
 								</div>
 							</div>
 						))}
+						{totalListPages > 1 && (
+							<div
+								style={{
+									display: 'flex',
+									flexWrap: 'wrap',
+									alignItems: 'center',
+									justifyContent: 'space-between',
+									gap: 12,
+									padding: '16px 4px',
+									paddingBottom:
+										'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
+								}}
+							>
+								<IonButton
+									fill="outline"
+									size="small"
+									disabled={safeListPage <= 0}
+									onClick={() =>
+										setListPage((p) => Math.max(0, p - 1))
+									}
+								>
+									Anterior
+								</IonButton>
+								<IonButton
+									fill="outline"
+									size="small"
+									disabled={safeListPage >= totalListPages - 1}
+									onClick={() =>
+										setListPage((p) =>
+											Math.min(totalListPages - 1, p + 1),
+										)
+									}
+								>
+									Siguiente
+								</IonButton>
+							</div>
+						)}
+							</>
+						)}
 					</div>
 				)}
 
